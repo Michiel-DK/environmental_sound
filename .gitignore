@@ -1,1 +1,3 @@
 audio_data/
+*.csv
+__pycache__/
