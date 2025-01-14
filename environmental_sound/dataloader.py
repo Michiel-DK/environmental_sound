@@ -7,6 +7,8 @@ import librosa
 import pandas as pd
 from tqdm import tqdm
 import tensorflow as tf  # For one-hot encoding; alternatively use PyTorch methods
+import cv2  # For resizing images
+
 
 class MFCCDataModule(pl.LightningDataModule):
     def __init__(
@@ -15,10 +17,12 @@ class MFCCDataModule(pl.LightningDataModule):
         data_path='audio_data/44100',  # Default directory path
         batch_size=32, 
         num_workers=4,
-        train_prefixes=['1'], 
+        train_prefixes=['1', '2', '3'], 
         val_prefixes=['4'], 
         test_prefixes=['5'],
-        num_classes=50
+        num_classes=50,
+        resize = True,
+        target_size=(224, 224)  # Desired size for each MFCC image (height, width)
     ):
         """
         Args:
@@ -40,6 +44,9 @@ class MFCCDataModule(pl.LightningDataModule):
         self.val_prefixes = val_prefixes
         self.test_prefixes = test_prefixes
         self.num_classes = num_classes
+        self.resize = resize
+        self.target_size = target_size  # (height, width)
+
 
     def setup(self, stage=None):
         # Filter DataFrame based on filename prefixes for train, val, test splits
@@ -59,28 +66,41 @@ class MFCCDataModule(pl.LightningDataModule):
         self.test_dataset = self.process_df(self.test_df)
 
     def process_df(self, subset_df):
-        """Process a subset of the DataFrame to compute MFCCs and one-hot encode labels."""
+        """Process a DataFrame subset to compute MFCCs, resize them, and one-hot encode labels."""
         X, y = [], []
 
+        # Desired dimensions for resizing
+        target_height, target_width = self.target_size
+
         for _, row in tqdm(subset_df.iterrows(), total=len(subset_df), desc="Processing"):
-            # row[0]: filename, row[1]: label
-            file_path = os.path.join(self.data_path, row[0])
+            # Extract filename and label from DataFrame row
+            filename, label = row.iloc[0], row.iloc[1]
+            file_path = os.path.join(self.data_path, filename)
             try:
-                sig, sr = librosa.load(file_path, sr=None)  # Load audio file
+                sig, sr = librosa.load(file_path, sr=None)
             except Exception as e:
                 print(f"Error loading {file_path}: {e}")
                 continue
 
-            # Extract three random 2-second MFCC segments per audio file
+            # Extract multiple segments per audio file
             for _ in range(3):
-                if len(sig) < sr * 2:  # Skip if the file is shorter than 2 seconds
+                if len(sig) < sr * 2:
                     continue
                 start_idx = np.random.randint(0, len(sig) - (sr * 2))
                 sig_segment = sig[start_idx : start_idx + (sr * 2)]
                 mfcc = librosa.feature.mfcc(y=sig_segment, sr=sr, n_mfcc=13)
+
+                # Resize MFCC if it does not match the target size
+                if self.resize:
+                    # cv2.resize expects (width, height)
+                    mfcc = cv2.resize(mfcc, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
+
                 X.append(mfcc)
-                y.append(row[1])
+                y.append(label)
         
+        # Convert lists to numpy arrays
+        X = np.array(X)
+        y = np.array(y)
         # Convert lists to arrays
         X = np.array(X)
         y = np.array(y)
@@ -107,7 +127,8 @@ class MFCCDataModule(pl.LightningDataModule):
             self.val_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=False
+            shuffle=False,
+            persistent_workers=True
         )
 
     def test_dataloader(self):
@@ -115,14 +136,15 @@ class MFCCDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=False
+            shuffle=False,
+            persistent_workers=True
         )
 
 if __name__ == '__main__':
     
     labels_df = pd.read_csv('audio_data/esc50.csv')
     
-    data_module = MFCCDataModule(df=labels_df, batch_size=32, num_workers=4)
+    data_module = MFCCDataModule(df=labels_df, batch_size=32, num_workers=4, resize=False)
 
     # Setup to prepare datasets and dataloaders
     data_module.setup()
@@ -131,5 +153,13 @@ if __name__ == '__main__':
     train_loader = data_module.train_dataloader()
     val_loader = data_module.val_dataloader()
     test_loader = data_module.test_dataloader()
+    
+    for x in train_loader:
+        x_test = x
+        break
+    
+    for x in val_loader:
+        x_val = x
+        break
     
     import ipdb;ipdb.set_trace()
