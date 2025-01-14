@@ -16,7 +16,7 @@ def main_run():
     # EarlyStopping callback: stops training if no improvement in 'val_loss' for 3 epochs
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
-        patience=3,
+        patience=10,
         verbose=True,
         mode='min'
     )

@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import torchmetrics
 
 class CustomCNNLightning(pl.LightningModule):
-    def __init__(self, num_classes=50, lr=1e-3, input_shape=(1, 13, 173)):
+    def __init__(self, num_classes=50, lr=1e-4, input_shape=(1, 13, 173)):
         super().__init__()
         self.save_hyperparameters()
         self.lr = lr
@@ -82,10 +82,6 @@ class CustomCNNLightning(pl.LightningModule):
         loss = F.cross_entropy(logits, target)
         
         preds = torch.argmax(logits, dim=1)
-        
-        # Debug print for first batch
-        if batch_idx == 0:
-            print(f"Validation batch 0 - Predictions: {preds[:5]}, Targets: {target[:5]}")
             
         self.val_accuracy.update(preds, target)
         
@@ -133,7 +129,7 @@ class CustomCNNLightning(pl.LightningModule):
                 optimizer,
                 mode='min',
                 factor=0.1,
-                patience=2,
+                patience=3,
                 verbose=True
             ),
             'monitor': 'val_loss'

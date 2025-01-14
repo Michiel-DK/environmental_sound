@@ -21,7 +21,7 @@ class MFCCDataModule(pl.LightningDataModule):
         val_prefixes=['4'], 
         test_prefixes=['5'],
         num_classes=50,
-        resize = True,
+        resize = False,
         target_size=(224, 224)  # Desired size for each MFCC image (height, width)
     ):
         """
@@ -74,7 +74,7 @@ class MFCCDataModule(pl.LightningDataModule):
 
         for _, row in tqdm(subset_df.iterrows(), total=len(subset_df), desc="Processing"):
             # Extract filename and label from DataFrame row
-            filename, label = row.iloc[0], row.iloc[1]
+            filename, label = row.iloc[0], row.iloc[2]
             file_path = os.path.join(self.data_path, filename)
             try:
                 sig, sr = librosa.load(file_path, sr=None)
@@ -119,7 +119,8 @@ class MFCCDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=True
+            shuffle=True,
+            persistent_workers=True
         )
 
     def val_dataloader(self):
