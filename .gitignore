@@ -1,1 +1,5 @@
 audio_data/
+*.csv
+__pycache__/
+checkpoints/
+wandb/
