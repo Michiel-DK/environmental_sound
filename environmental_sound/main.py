@@ -6,17 +6,21 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 from environmental_sound.dataloader import MFCCDataModule
 from environmental_sound.resnet_model import CustomCNNLightning
+from environmental_sound.transformations import RandomAudio, TimeStretch, MelSpectrogram, SpecAugment, SpectToImage
+
+import albumentations
+
 
 
 def main_run():
 
     # Initialize WandB logger
-    wandb_logger = WandbLogger(project='environmental-sound', group="base_resnet50")
+    wandb_logger = WandbLogger(project='environmental-sound', group="base_resnet50", name='base_resnet50_aug')
 
     # EarlyStopping callback: stops training if no improvement in 'val_loss' for 3 epochs
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
-        patience=10,
+        patience=13,
         verbose=True,
         mode='min'
     )
@@ -52,8 +56,23 @@ def main_run():
 
     labels_df = pd.read_csv('audio_data/esc50.csv')
 
+    train_transform = albumentations.Compose([
+        RandomAudio(seconds=1, p=0.5),    # <-- augmentation
+        TimeStretch(p=0.5),              # <-- augmentation
+        #MelSpectrogram(parameters={"n_mels": 128, "fmax": 8000}, p=1.0),  # <-- necessary
+        SpecAugment(p=0.5),              # <-- augmentation
+        SpectToImage(p=1.0)              # <-- can be seen as final step
+    ])
+
+    val_test_transform = albumentations.Compose([
+        # No random augmentation here;
+        # Just do the minimal steps needed to get the final representation
+       # MelSpectrogram(parameters={"n_mels": 128, "fmax": 8000}, p=1.0),
+        SpectToImage(p=1.0)
+    ])
+
     # Initialize the data module
-    data_module = MFCCDataModule(df=labels_df, target_size=(13, 173))
+    data_module = MFCCDataModule(df=labels_df, target_size=(13, 173), audio_transform_train=train_transform, audio_transform_val_test=val_test_transform, batch_size=8)
     
     data_module.setup()
 

@@ -110,8 +110,7 @@ class CustomCNNLightning(pl.LightningModule):
         val_loss = self.trainer.callback_metrics.get('val_loss')
         val_acc = self.trainer.callback_metrics.get('val_acc')
         
-        val_acc_value = self.val_accuracy.compute()
-        print(f"Epoch {self.current_epoch}: Val Loss = {val_loss:.4f}, Val Acc (manual) = {val_acc_value:.4f}")
+        print(f"Epoch {self.current_epoch}: Val Loss = {val_loss:.4f}, Val Acc = {val_acc:.4f}")
         
         #print(f"Epoch {self.current_epoch}: Val Loss = {val_loss:.4f}, Val Acc = {val_acc:.4f}")
         self.val_accuracy.reset()
@@ -130,7 +129,6 @@ class CustomCNNLightning(pl.LightningModule):
                 mode='min',
                 factor=0.1,
                 patience=3,
-                verbose=True
             ),
             'monitor': 'val_loss'
         }
