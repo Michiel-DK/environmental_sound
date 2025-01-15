@@ -29,7 +29,10 @@ class MFCCDataModule(pl.LightningDataModule):
         target_size=(224, 224),
         audio_transform_train=None,
         audio_transform_val_test=None,
-        use_mfcc=True
+        use_mfcc=True,
+        train_pct=0.75,
+        val_pct=0.15,
+        test_pct=0.10
     ):
         """
         Args:
@@ -61,18 +64,25 @@ class MFCCDataModule(pl.LightningDataModule):
         self.audio_transform_train = audio_transform_train
         self.audio_transform_val_test = audio_transform_val_test
         self.use_mfcc = use_mfcc
-
+        
+        # Save percentage splits
+        self.train_pct = train_pct
+        self.val_pct = val_pct
+        self.test_pct = test_pct
+    
     def setup(self, stage=None):
-        # Filter DataFrame based on filename prefixes for train, val, test splits
-        self.train_df = self.df[self.df.iloc[:, 0].apply(
-            lambda x: any(str(x).startswith(prefix) for prefix in self.train_prefixes)
-        )]
-        self.val_df = self.df[self.df.iloc[:, 0].apply(
-            lambda x: any(str(x).startswith(prefix) for prefix in self.val_prefixes)
-        )]
-        self.test_df = self.df[self.df.iloc[:, 0].apply(
-            lambda x: any(str(x).startswith(prefix) for prefix in self.test_prefixes)
-        )]
+        # Shuffle the entire dataset
+        df_shuffled = self.df.sample(frac=1, random_state=42).reset_index(drop=True)
+        n = len(df_shuffled)
+
+        # Calculate split indices based on percentages
+        train_end = int(n * self.train_pct)
+        val_end = train_end + int(n * self.val_pct)
+
+        # Split the dataframe
+        self.train_df = df_shuffled.iloc[:train_end]
+        self.val_df = df_shuffled.iloc[train_end:val_end]
+        self.test_df = df_shuffled.iloc[val_end:]
 
         # Process each subset to compute features (MFCC or transform's output) and create datasets
         self.train_dataset = self.process_df(self.train_df, transform=self.audio_transform_train)
@@ -121,7 +131,7 @@ class MFCCDataModule(pl.LightningDataModule):
                     #   For simplicity, let's assume data_out is still raw audio if we want MFCC.
                     if isinstance(data_out, np.ndarray) and data_out.ndim == 1:
                         # data_out is 1D => raw audio, so compute MFCC
-                        features = librosa.feature.mfcc(y=data_out, sr=sr_out, n_mfcc=13)
+                        features = librosa.feature.mfcc(y=data_out, sr=sr_out, n_mfcc=40)
                     else:
                         # data_out might already be a spectrogram
                         features = data_out

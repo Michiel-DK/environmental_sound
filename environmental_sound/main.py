@@ -58,9 +58,9 @@ def main_run():
 
     train_transform = albumentations.Compose([
         RandomAudio(seconds=1, p=0.5),    # <-- augmentation
-        TimeStretch(p=0.5),              # <-- augmentation
+        TimeStretch(p=0.8),              # <-- augmentation
         #MelSpectrogram(parameters={"n_mels": 128, "fmax": 8000}, p=1.0),  # <-- necessary
-        SpecAugment(p=0.5),              # <-- augmentation
+        SpecAugment(p=0.8),              # <-- augmentation
         SpectToImage(p=1.0)              # <-- can be seen as final step
     ])
 
@@ -72,9 +72,9 @@ def main_run():
     ])
 
     # Initialize the data module
-    data_module = MFCCDataModule(df=labels_df, target_size=(13, 173), audio_transform_train=train_transform, audio_transform_val_test=val_test_transform, batch_size=8)
+    data_module = MFCCDataModule(df=labels_df, target_size=(13, 173), audio_transform_train=train_transform, audio_transform_val_test=val_test_transform, batch_size=32)
     
-    data_module.setup()
+    #data_module.setup()
 
     # Initialize the ResNet50 Lightning model
     model = CustomCNNLightning(num_classes=50, lr=1e-3, input_shape=(1, 13, 173))
