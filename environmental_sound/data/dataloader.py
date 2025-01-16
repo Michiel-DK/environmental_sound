@@ -127,7 +127,7 @@ class MFCCDataModule(pl.LightningDataModule):
                     #   For simplicity, let's assume data_out is still raw audio if we want MFCC.
                     if isinstance(data_out, np.ndarray) and data_out.ndim == 1:
                         # data_out is 1D => raw audio, so compute MFCC
-                        features = librosa.feature.mfcc(y=data_out, sr=sr_out, n_mfcc=40)
+                        features = librosa.feature.mfcc(y=data_out, sr=sr_out, n_mfcc=64)
                     else:
                         # data_out might already be a spectrogram
                         features = data_out

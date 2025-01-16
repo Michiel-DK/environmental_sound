@@ -6,7 +6,7 @@ wandb:
 trainer:
   batch_size: 32
   learning_rate: 1e-3
-  n_mfcc: 40
+  n_mfcc: 64
   num_classes: 50
   sample_subset: 3
   wandb_log: True

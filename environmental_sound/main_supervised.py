@@ -93,6 +93,7 @@ def main_run(cfg: DictConfig):
         SpectToImage(p=1.0)
     ])
     
+    
     if trainer_config.wandb_log:
         run = wandb_logger.experiment
         run.config.update(
