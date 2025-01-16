@@ -17,8 +17,10 @@ from omegaconf import DictConfig, OmegaConf
 
 from bunch import Bunch
 
+import os
 
-@hydra.main(config_path="conf", config_name="config")
+
+@hydra.main(config_path="conf", config_name="config", version_base=None)
 def main_run(cfg: DictConfig):
     
     #access hydra config
@@ -73,7 +75,8 @@ def main_run(cfg: DictConfig):
         callbacks=[early_stop_callback, lr_monitor, checkpoint_callback]
     )
 
-    labels_df = pd.read_csv('audio_data/esc50.csv')
+    csv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/esc50.csv')
+    labels_df = pd.read_csv(csv_path)
 
     train_transform = albumentations.Compose([
         RandomAudio(seconds=1, p=0.5),    # <-- augmentation
@@ -91,18 +94,21 @@ def main_run(cfg: DictConfig):
     ])
     
     if trainer_config.wandb_log:
-        wandb_logger.config.update(
+        run = wandb_logger.experiment
+        run.config.update(
             {"train_transform": train_transform, 
              "val_test_transform": val_test_transform,
-             "train_size": len(labels_df)+trainer_config.train_size,
-             "test_size": len(labels_df)+trainer_config.test_size,
-             "val_size": len(labels_df)+trainer_config.val_size,}
+             "dataset_size": len(labels_df),
+             }
         )
+        
+    data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/44100/')
 
     # Initialize the data module
     data_module = MFCCDataModule(df=labels_df, target_size=(trainer_config.n_mfcc, 173), audio_transform_train=train_transform\
         ,audio_transform_val_test=val_test_transform, batch_size=trainer_config.batch_size \
-        ,sample_subset=trainer_config.sample_subset, train_pct=trainer_config.train_size, val_pct=trainer_config.val_size, test_pct=trainer_config.test_size)
+        ,sample_subset=trainer_config.sample_subset, train_pct=trainer_config.train_size, val_pct=trainer_config.val_size, test_pct=trainer_config.test_size\
+            ,data_path=data_path)
     
     # Initialize the ResNet50 Lightning model
     model = CustomCNNLightning(num_classes=trainer_config.num_classes, lr=trainer_config.learning_rate, input_shape=(1, trainer_config.n_mfcc, 173))
