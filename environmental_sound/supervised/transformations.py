@@ -3,7 +3,7 @@ from albumentations.core.transforms_interface import DualTransform, BasicTransfo
 import random
 import numpy as np
 import librosa
-from environmental_sound.utils import SerializableTransformMixin
+from environmental_sound.utils.utils import SerializableTransformMixin
 
 class AudioTransform(BasicTransform):
     """Transform for Audio task"""

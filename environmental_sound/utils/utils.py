@@ -1,5 +1,5 @@
 import scipy.io.wavfile as sci_wav
-import bc_utils as U
+import environmental_sound.utils.bc_utils as U
 import pandas as pd
 import numpy as np
 import threading

@@ -9,7 +9,7 @@ from tqdm import tqdm
 import tensorflow as tf  # For one-hot encoding; alternatively use PyTorch methods
 import cv2  # For resizing images
 
-from environmental_sound.transformations import RandomAudio, TimeStretch, MelSpectrogram, SpecAugment, SpectToImage
+from environmental_sound.supervised.transformations import RandomAudio, TimeStretch, MelSpectrogram, SpecAugment, SpectToImage
 
 import albumentations
 
