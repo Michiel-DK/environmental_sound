@@ -1,0 +1,17 @@
+wandb:
+  project: "environmental-sound"
+  group: "base_resnet50"        # replace with your W&B username or team
+  name: "base_resnet50_aug"
+
+trainer:
+  batch_size: 32
+  learning_rate: 1e-3
+  n_mfcc: 40
+  num_classes: 50
+  sample_subset: 3
+  wandb_log: True
+  train_size: 0.75
+  val_size: 0.15
+  test_size: 0.15
+
+

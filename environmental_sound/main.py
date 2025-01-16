@@ -10,13 +10,32 @@ from environmental_sound.transformations import RandomAudio, TimeStretch, MelSpe
 
 import albumentations
 
+from pytorch_lightning.loggers import TensorBoardLogger
+
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
+from bunch import Bunch
 
 
-def main_run():
-
+@hydra.main(config_path="conf", config_name="config")
+def main_run(cfg: DictConfig):
+    
+    #access hydra config
+    config_dict = OmegaConf.to_container(cfg, resolve=True)
+    
+    #access config values with Bunch for easier implementation
+    project_config = Bunch(config_dict['wandb'])
+    trainer_config = Bunch(config_dict['trainer'])
+        
     # Initialize WandB logger
-    wandb_logger = WandbLogger(project='environmental-sound', group="base_resnet50", name='base_resnet50_aug')
-
+    if trainer_config.wandb_log:
+        wandb_logger = WandbLogger(project=project_config.project\
+            ,group=project_config.group, name=project_config.name\
+                ,config=config_dict['trainer'])
+    else:
+        tensor_logger = TensorBoardLogger(save_dir="tensorboard_logs/", name=project_config.name)
+    
     # EarlyStopping callback: stops training if no improvement in 'val_loss' for 3 epochs
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
@@ -50,7 +69,7 @@ def main_run():
         max_epochs=100,
         accelerator=accelerator,
         devices=1,  # Use one device; adjust as needed
-        logger=wandb_logger,
+        logger=[wandb_logger if trainer_config.wandb_log else tensor_logger],
         callbacks=[early_stop_callback, lr_monitor, checkpoint_callback]
     )
 
@@ -70,14 +89,23 @@ def main_run():
        # MelSpectrogram(parameters={"n_mels": 128, "fmax": 8000}, p=1.0),
         SpectToImage(p=1.0)
     ])
+    
+    if trainer_config.wandb_log:
+        wandb_logger.config.update(
+            {"train_transform": train_transform, 
+             "val_test_transform": val_test_transform,
+             "train_size": len(labels_df)+trainer_config.train_size,
+             "test_size": len(labels_df)+trainer_config.test_size,
+             "val_size": len(labels_df)+trainer_config.val_size,}
+        )
 
     # Initialize the data module
-    data_module = MFCCDataModule(df=labels_df, target_size=(13, 173), audio_transform_train=train_transform, audio_transform_val_test=val_test_transform, batch_size=32)
+    data_module = MFCCDataModule(df=labels_df, target_size=(trainer_config.n_mfcc, 173), audio_transform_train=train_transform\
+        ,audio_transform_val_test=val_test_transform, batch_size=trainer_config.batch_size \
+        ,sample_subset=trainer_config.sample_subset, train_pct=trainer_config.train_size, val_pct=trainer_config.val_size, test_pct=trainer_config.test_size)
     
-    #data_module.setup()
-
     # Initialize the ResNet50 Lightning model
-    model = CustomCNNLightning(num_classes=50, lr=1e-3, input_shape=(1, 13, 173))
+    model = CustomCNNLightning(num_classes=trainer_config.num_classes, lr=trainer_config.learning_rate, input_shape=(1, trainer_config.n_mfcc, 173))
 
     # Train the model using the data module
     trainer.fit(model, datamodule=data_module)

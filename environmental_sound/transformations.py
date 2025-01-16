@@ -3,6 +3,7 @@ from albumentations.core.transforms_interface import DualTransform, BasicTransfo
 import random
 import numpy as np
 import librosa
+from environmental_sound.utils import SerializableTransformMixin
 
 class AudioTransform(BasicTransform):
     """Transform for Audio task"""
@@ -18,7 +19,7 @@ class AudioTransform(BasicTransform):
             params["fill_value"] = self.fill_value
         return params
     
-class TimeStretch(AudioTransform):
+class TimeStretch(SerializableTransformMixin, AudioTransform):
     """Shifting time axis"""
     def __init__(self, always_apply=False, p=0.5):
         super(TimeStretch, self).__init__(always_apply, p)
@@ -31,7 +32,7 @@ class TimeStretch(AudioTransform):
 
         return augmented_sound, sr
     
-class RandomAudio(AudioTransform):
+class RandomAudio(SerializableTransformMixin, AudioTransform):
     """Shifting time axis"""
     def __init__(self,  seconds=5, always_apply=False, p=0.5):
         super(RandomAudio, self).__init__(always_apply, p)
@@ -55,7 +56,7 @@ class RandomAudio(AudioTransform):
 
         return trim_sound, sr
     
-class MelSpectrogram(AudioTransform):
+class MelSpectrogram(SerializableTransformMixin, AudioTransform):
     """Shifting time axis"""
     def __init__(self, parameters, always_apply=False, p=0.5):
         super(MelSpectrogram, self).__init__(always_apply, p)
@@ -71,7 +72,7 @@ class MelSpectrogram(AudioTransform):
 
         return melspec, sr
     
-class SpecAugment(AudioTransform):
+class SpecAugment(SerializableTransformMixin, AudioTransform):
     """Shifting time axis"""
     def __init__(self, num_mask=2, freq_masking=0.15, time_masking=0.20, always_apply=False, p=0.5):
         super(SpecAugment, self).__init__(always_apply, p)
@@ -119,7 +120,7 @@ class SpecAugment(AudioTransform):
 
         return spec
 
-class SpectToImage(AudioTransform):
+class SpectToImage(SerializableTransformMixin, AudioTransform):
 
     def __init__(self, always_apply=False, p=0.5):
         super(SpectToImage, self).__init__(always_apply, p)

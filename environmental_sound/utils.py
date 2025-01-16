@@ -5,7 +5,26 @@ import numpy as np
 import threading
 import random
 import os
+import inspect
 
+class SerializableTransformMixin:
+    def get_transform_init_args_names(self):
+        # Introspect the __init__ signature, ignoring 'self' and variable arguments
+        sig = inspect.signature(self.__init__)
+        return tuple(
+            name for name, param in sig.parameters.items()
+            # Consider only regular parameters, skip self and varargs
+            if param.kind in (
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY
+            ) and name != 'self'
+        )
+
+    def get_transform_init_args(self):
+        # Use the dynamic parameter names to get a dictionary of current values
+        names = self.get_transform_init_args_names()
+        return {name: getattr(self, name, None) for name in names}
 
 def to_categorical(number, n_classes):
     categorical = np.zeros(n_classes)
