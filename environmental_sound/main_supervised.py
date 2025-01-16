@@ -4,9 +4,9 @@ import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
-from environmental_sound.dataloader import MFCCDataModule
-from environmental_sound.resnet_model import CustomCNNLightning
-from environmental_sound.transformations import RandomAudio, TimeStretch, MelSpectrogram, SpecAugment, SpectToImage
+from environmental_sound.data.dataloader import MFCCDataModule
+from environmental_sound.supervised.resnet_model import CustomCNNLightning
+from environmental_sound.supervised.transformations import RandomAudio, TimeStretch, MelSpectrogram, SpecAugment, SpectToImage
 
 import albumentations
 
