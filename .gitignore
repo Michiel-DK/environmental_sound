@@ -1,5 +1,8 @@
 audio_data/
 *.csv
-__pycache__/
+*__pycache__/
 checkpoints/
 wandb/
+tensorboard_logs/
+outputs/
+*.egg-info/

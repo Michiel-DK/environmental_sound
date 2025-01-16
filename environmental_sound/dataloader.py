@@ -21,9 +21,6 @@ class MFCCDataModule(pl.LightningDataModule):
         data_path='audio_data/44100',  # Default directory path
         batch_size=32, 
         num_workers=4,
-        train_prefixes=['1', '2', '3'], 
-        val_prefixes=['4'], 
-        test_prefixes=['5'],
         num_classes=50,
         resize=False,
         target_size=(224, 224),
@@ -32,7 +29,8 @@ class MFCCDataModule(pl.LightningDataModule):
         use_mfcc=True,
         train_pct=0.75,
         val_pct=0.15,
-        test_pct=0.10
+        test_pct=0.10,
+        sample_subset=3
     ):
         """
         Args:
@@ -55,15 +53,13 @@ class MFCCDataModule(pl.LightningDataModule):
         self.data_path = data_path
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.train_prefixes = train_prefixes
-        self.val_prefixes = val_prefixes
-        self.test_prefixes = test_prefixes
         self.num_classes = num_classes
         self.resize = resize
         self.target_size = target_size
         self.audio_transform_train = audio_transform_train
         self.audio_transform_val_test = audio_transform_val_test
         self.use_mfcc = use_mfcc
+        self.sample_subset = sample_subset
         
         # Save percentage splits
         self.train_pct = train_pct
@@ -106,7 +102,7 @@ class MFCCDataModule(pl.LightningDataModule):
                 continue
 
             # Extract multiple segments per audio file (example: 3 segments)
-            for _ in range(3):
+            for _ in range(self.sample_subset):
                 if len(sig) < sr * 2:
                     # Audio too short to reliably segment
                     continue
@@ -150,7 +146,7 @@ class MFCCDataModule(pl.LightningDataModule):
 
                 X.append(features)
                 y.append(label)
-
+                
         X = np.array(X)
         y = np.array(y)
 
@@ -195,7 +191,7 @@ if __name__ == '__main__':
     labels_df = pd.read_csv('audio_data/esc50.csv')
     
     train_transform = albumentations.Compose([
-        RandomAudio(seconds=5, p=0.5),    # <-- augmentation
+        RandomAudio(seconds=2, p=0.5),    # <-- augmentation
         TimeStretch(p=0.5),              # <-- augmentation
         #MelSpectrogram(parameters={"n_mels": 128, "fmax": 8000, "n_mfcc":13}, p=1.0),  # <-- necessary
         SpecAugment(p=0.5),              # <-- augmentation
