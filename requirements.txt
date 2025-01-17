@@ -23,6 +23,8 @@ cycler==0.12.1
 debugpy==1.8.11
 decorator==5.1.1
 docker-pycreds==0.4.0
+efficientnet-pytorch==0.7.1
+-e git+ssh://git@github.com/Michiel-DK/environmental_sound.git@c68331919d210b50f562d70b51f102258fb3817c#egg=environmental_sound
 exceptiongroup==1.2.2
 executing==2.1.0
 filelock==3.16.1
