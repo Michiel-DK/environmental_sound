@@ -66,8 +66,8 @@ class Cola(pl.LightningModule):
         _, predicted = torch.max(y_hat, 1)
         acc = (predicted == y).float().mean()
 
-        self.log("train_loss", loss)
-        self.log("train_acc", acc)
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         return loss
 
@@ -83,8 +83,8 @@ class Cola(pl.LightningModule):
         _, predicted = torch.max(y_hat, 1)
         acc = (predicted == y).float().mean()
 
-        self.log("valid_loss", loss)
-        self.log("valid_acc", acc)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, x, batch_idx):
         x1, x2 = self(x)
@@ -98,8 +98,8 @@ class Cola(pl.LightningModule):
         _, predicted = torch.max(y_hat, 1)
         acc = (predicted == y).float().mean()
 
-        self.log("test_loss", loss)
-        self.log("test_acc", acc)
+        self.log("test_loss", loss, prog_bar=True)
+        self.log("test_acc", acc, prog_bar=True)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-4)

@@ -111,8 +111,6 @@ class CustomCNNLightning(pl.LightningModule):
         val_acc = self.trainer.callback_metrics.get('val_acc')
         
         print(f"Epoch {self.current_epoch}: Val Loss = {val_loss:.4f}, Val Acc = {val_acc:.4f}")
-        
-        #print(f"Epoch {self.current_epoch}: Val Loss = {val_loss:.4f}, Val Acc = {val_acc:.4f}")
         self.val_accuracy.reset()
 
     def on_test_epoch_end(self):

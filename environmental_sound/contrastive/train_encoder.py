@@ -54,7 +54,7 @@ class DecayLearningRate(pl.Callback):
                 group.append(param_group["lr"])
             self.old_lrs.append(group)
 
-    def on_train_epoch_end(self, trainer, pl_module, outputs):
+    def on_train_epoch_end(self, trainer, pl_module):
         for opt_idx, optimizer in enumerate(trainer.optimizers):
             old_lr_group = self.old_lrs[opt_idx]
             new_lr_group = []
