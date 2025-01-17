@@ -2,6 +2,8 @@ wandb:
   project: "environmental-sound"
   group: "contrastive_model"  #base_resnet50
   name: "contrastive_model" #base_resnet50_aug/no_aug
+  bucket_name: "environmental_sound"
+  tar_blob_name: "44100_npy.tar"
 
 trainer_supervised:
   batch_size: 32
@@ -23,3 +25,4 @@ trainer_contrastive:
   random_state: 42
   wandb_log: False
   finetune_prefix: '5-'
+
