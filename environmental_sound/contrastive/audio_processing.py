@@ -87,6 +87,6 @@ if __name__ == "__main__":
     for i, file in tqdm(enumerate(files), total=len(files)):
         
         input_file = os.path.join(input_data_path, file)
-        output_file = os.path.join(output_data_path, file.replace('.mp3', '.npy'))
+        output_file = os.path.join(output_data_path, file.replace('.wav', '.npy'))
         
         save(input_file, output_file)

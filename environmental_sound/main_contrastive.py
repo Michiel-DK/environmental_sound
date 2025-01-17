@@ -32,7 +32,10 @@ def main_run(cfg: DictConfig):
 
     files = os.listdir(output_data_path)
     
-    files_paths = [os.path.join(output_data_path, f) for f in files]
+    #filter for later finetuning
+    filtered_files = [file for file in files if not file.startswith(trainer_config.finetune_prefix)]
+    
+    files_paths = [os.path.join(output_data_path, f) for f in filtered_files]
 
     _train, test = train_test_split(files_paths, test_size=trainer_config.test_size, random_state=trainer_config.random_state)
 
@@ -98,7 +101,7 @@ def main_run(cfg: DictConfig):
     )
     trainer.fit(model, train_loader, val_loader)
 
-    trainer.test(test_dataloaders=test_loader)
+    trainer.test(dataloaders=test_loader)
     
 if __name__ == "__main__":
     main_run()

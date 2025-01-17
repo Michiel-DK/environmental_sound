@@ -6,3 +6,4 @@ wandb/
 tensorboard_logs/
 outputs/
 *.egg-info/
+*.tar

@@ -41,7 +41,7 @@ class Cola(pl.LightningModule):
 
     def forward(self, x):
         x1, x2 = x
-
+        
         x1 = self.do(self.encoder(x1))
         x1 = self.do(self.g(x1))
         x1 = self.do(torch.tanh(self.layer_norm(x1)))
@@ -55,6 +55,7 @@ class Cola(pl.LightningModule):
         return x1, x2
 
     def training_step(self, x, batch_idx):
+
         x1, x2 = self(x)
 
         y = torch.arange(x1.size(0), device=x1.device)
@@ -72,6 +73,7 @@ class Cola(pl.LightningModule):
         return loss
 
     def validation_step(self, x, batch_idx):
+        
         x1, x2 = self(x)
 
         y = torch.arange(x1.size(0), device=x1.device)
@@ -106,7 +108,7 @@ class Cola(pl.LightningModule):
 
 
 class AudioClassifier(pl.LightningModule):
-    def __init__(self, classes=8, p=0.1):
+    def __init__(self, classes=50, p=0.1):
         super().__init__()
         self.save_hyperparameters()
 
