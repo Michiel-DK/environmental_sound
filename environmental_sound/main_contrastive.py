@@ -15,6 +15,7 @@ import pytorch_lightning as pl
 
 
 from environmental_sound.contrastive.train_encoder import AudioDataset, Cola, DecayLearningRate
+from environmental_sound.utils.gcp import check_and_setup_directory
 
 
 
@@ -27,11 +28,17 @@ def main_run(cfg: DictConfig):
     #access config values with Bunch for easier implementation
     project_config = Bunch(config_dict['wandb'])
     trainer_config = Bunch(config_dict['trainer_contrastive'])
+    
+    
+    root_path = os.path.dirname(os.path.dirname(__file__))
+    data_path = 'audio_data/44100_npy/'
         
-    output_data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/44100_npy/')
+    output_data_path = os.path.join(root_path, data_path)
+    
+    check_and_setup_directory(root_path, output_data_path, project_config.bucket_name, project_config.tar_blob_name)
 
     files = os.listdir(output_data_path)
-    
+        
     #filter for later finetuning
     filtered_files = [file for file in files if not file.startswith(trainer_config.finetune_prefix)]
     
