@@ -64,7 +64,7 @@ class Cola(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y)
 
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("train_loss", loss)
         self.log("train_acc", acc)
@@ -81,7 +81,7 @@ class Cola(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y)
 
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("valid_loss", loss)
         self.log("valid_acc", acc)
@@ -96,7 +96,7 @@ class Cola(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y)
 
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("test_loss", loss)
         self.log("test_acc", acc)
@@ -141,7 +141,7 @@ class AudioClassifier(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y)
 
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("train_loss", loss)
         self.log("train_acc", acc)
@@ -156,7 +156,7 @@ class AudioClassifier(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y)
 
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("valid_loss", loss)
         self.log("valid_acc", acc)
@@ -169,7 +169,7 @@ class AudioClassifier(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y)
 
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("test_loss", loss)
         self.log("test_acc", acc)

@@ -28,13 +28,13 @@ def main_run(cfg: DictConfig):
     
     #access config values with Bunch for easier implementation
     project_config = Bunch(config_dict['wandb'])
-    trainer_config = Bunch(config_dict['trainer'])
+    trainer_config = Bunch(config_dict['trainer_supervised'])
         
     # Initialize WandB logger
     if trainer_config.wandb_log:
         wandb_logger = WandbLogger(project=project_config.project\
             ,group=project_config.group, name=project_config.name\
-                ,config=config_dict['trainer'])
+                ,config=config_dict['trainer_supervised'])
     else:
         tensor_logger = TensorBoardLogger(save_dir="tensorboard_logs/", name=project_config.name)
     

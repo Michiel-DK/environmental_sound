@@ -64,7 +64,7 @@ class DecayLearningRate(pl.Callback):
                 new_lr_group.append(new_lr)
                 param_group["lr"] = new_lr
             self.old_lrs[opt_idx] = new_lr_group
-
+            
 
 if __name__ == "__main__":
     import argparse

@@ -1,9 +1,9 @@
 wandb:
   project: "environmental-sound"
-  group: "base_resnet50"        # replace with your W&B username or team
-  name: "base_resnet50_aug"
+  group: "contrastive_model"  #base_resnet50
+  name: "contrastive_model" #base_resnet50_aug/no_aug
 
-trainer:
+trainer_supervised:
   batch_size: 32
   learning_rate: 1e-3
   n_mfcc: 64
@@ -14,4 +14,11 @@ trainer:
   val_size: 0.15
   test_size: 0.15
 
-
+trainer_contrastive:
+  batch_size: 8
+  epochs: 10
+  train_size: 0.75
+  val_size: 0.15
+  test_size: 0.15
+  random_state: 42
+  wandb_log: True
