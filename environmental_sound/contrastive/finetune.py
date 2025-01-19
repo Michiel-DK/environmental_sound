@@ -58,7 +58,7 @@ class DecayLearningRate(pl.Callback):
             self.old_lrs[opt_idx] = new_lr_group
             
 class ReduceLROnPlateauCallback(pl.Callback):
-    def __init__(self, monitor='val_loss', mode='min', factor=0.1, patience=5, min_lr=1e-6, verbose=True):
+    def __init__(self, monitor='val_loss', mode='min', factor=0.5, patience=5, min_lr=1e-6, verbose=True):
         """
         Args:
             monitor (str): The metric to monitor (e.g., 'val_loss').
@@ -98,8 +98,16 @@ class ReduceLROnPlateauCallback(pl.Callback):
 
         metric_value = metrics[self.monitor].item()
 
-        # Update each scheduler with the metric value
-        for scheduler in self.schedulers:
-            scheduler.step(metric_value)
+       # Update each scheduler with the metric value
+        for scheduler, optimizer in zip(self.schedulers, trainer.optimizers):
+            old_lrs = [group['lr'] for group in optimizer.param_groups]
+            scheduler.step(metric_value)  # Update the scheduler
+            new_lrs = [group['lr'] for group in optimizer.param_groups]
+
+            # Print if the learning rate decreased
+            for i, (old_lr, new_lr) in enumerate(zip(old_lrs, new_lrs)):
+                if new_lr < old_lr:
+                    print(f"Learning rate decreased in optimizer {optimizer}: "
+                          f"Group {i} | Old LR: {old_lr:.6f} -> New LR: {new_lr:.6f}")
     
     

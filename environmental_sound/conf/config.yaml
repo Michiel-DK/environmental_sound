@@ -28,10 +28,10 @@ trainer_contrastive:
 
 trainer_finetune:
   batch_size: 32
-  epochs: 100
-  train_size: 0.75
-  val_size: 0.15
-  test_size: 0.15
+  epochs: 500
+  train_size: 0.8
+  val_size: 0.10
+  test_size: 0.10
   random_state: 42
   wandb_log: True
   finetune_prefix: '5-'

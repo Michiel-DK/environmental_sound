@@ -107,9 +107,10 @@ def main_run(cfg: DictConfig):
         
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
-        patience=13,
+        patience=21,
         verbose=True,
-        mode='min'
+        mode='min',
+        min_delta=0.001
     )
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
@@ -130,7 +131,7 @@ def main_run(cfg: DictConfig):
                 )
     trainer.fit(model, train_loader, val_loader)
 
-    trainer.test(test_dataloaders=test_loader)
+    trainer.test(dataloaders=test_loader)
     
 if __name__ == '__main__':
     main_run()

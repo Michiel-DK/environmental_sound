@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Exit immediately if a command exits with a non-zero status
-set -e
-
-# Clone the GitHub repository
-echo "Cloning repository..."
-git clone https://github.com/Michiel-DK/environmental_sound.git || { echo "Git clone failed"; exit 1; }
-
 # Copy the tar file
 echo "Copying tar file..."
 cp /content/drive/MyDrive/environmental_sound/44100_npy.tar . || { echo "File copy failed"; exit 1; }
