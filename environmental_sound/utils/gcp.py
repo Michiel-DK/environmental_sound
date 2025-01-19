@@ -17,7 +17,7 @@ def check_and_setup_directory(root_path, output_data_path, bucket_name, tar_blob
         os.makedirs(output_data_path, exist_ok=True)
 
         # Initialize Google Cloud Storage client
-        storage_client = storage.Client()
+        storage_client = storage.Client(project='contrastive-learning-440810')
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(tar_blob_name)
 
