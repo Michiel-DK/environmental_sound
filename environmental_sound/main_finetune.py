@@ -62,7 +62,7 @@ def main_run(cfg: DictConfig):
         )
 
     train, val = train_test_split(
-            _train, test_sizet=trainer_config.val_size, random_state=trainer_config.random_state, stratify=[a[1] for a in _train]
+            _train, test_size=trainer_config.val_size, random_state=trainer_config.random_state, stratify=[a[1] for a in _train]
         )
 
     train_data = AudioDatasetSupervised(train, augment=False)
@@ -116,7 +116,7 @@ def main_run(cfg: DictConfig):
 
     if trainer_config.contrastive_checkpoint is not None:
             
-        ckpt = torch.load(trainer_config.contrastive_checkpoint)
+        ckpt = torch.load(os.path.join(root_path, 'checkpoints', trainer_config.contrastive_checkpoint), map_location=accelerator)
 
         model.load_state_dict(ckpt["state_dict"], strict=False)
 
