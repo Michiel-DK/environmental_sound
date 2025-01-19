@@ -66,6 +66,8 @@ class DecayLearningRate(pl.Callback):
             self.old_lrs[opt_idx] = new_lr_group
             
 
+            
+
 if __name__ == "__main__":
     import argparse
     from pathlib import Path

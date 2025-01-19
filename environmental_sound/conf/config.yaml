@@ -1,7 +1,7 @@
 wandb:
   project: "environmental-sound"
-  group: "contrastive_model"  #base_resnet50
-  name: "contrastive_model" #base_resnet50_aug/no_aug
+  group: "contrastive_finetune"  #base_resnet50 #contrastive_model
+  name: "contrastive_finetune" #base_resnet50_aug/no_aug #contrastive_model
   bucket_name: "environmental_sound"
   tar_blob_name: "44100_npy.tar"
 
@@ -26,3 +26,13 @@ trainer_contrastive:
   wandb_log: False
   finetune_prefix: '5-'
 
+trainer_finetune:
+  batch_size: 32
+  epochs: 500
+  train_size: 0.8
+  val_size: 0.10
+  test_size: 0.10
+  random_state: 42
+  wandb_log: True
+  finetune_prefix: '5-'
+  contrastive_checkpoint: 'contrastive-epoch=105-val_loss=3.33.ckpt'
