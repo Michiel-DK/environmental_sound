@@ -1,20 +1,14 @@
-import json
-from glob import glob
-
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import TensorBoardLogger
-from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
-
 from environmental_sound.contrastive.audio_processing import random_crop, random_mask, random_multiply
-from environmental_sound.contrastive.encoder import AudioClassifier
+
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 
 class AudioDatasetSupervised(torch.utils.data.Dataset):
-    def __init__(self, data, max_len=512, augment=True):
+    def __init__(self, data, max_len=100, augment=True):
         self.data = data
         self.max_len = max_len
         self.augment = augment
@@ -62,5 +56,50 @@ class DecayLearningRate(pl.Callback):
                 new_lr_group.append(new_lr)
                 param_group["lr"] = new_lr
             self.old_lrs[opt_idx] = new_lr_group
+            
+class ReduceLROnPlateauCallback(pl.Callback):
+    def __init__(self, monitor='val_loss', mode='min', factor=0.1, patience=5, min_lr=1e-6, verbose=True):
+        """
+        Args:
+            monitor (str): The metric to monitor (e.g., 'val_loss').
+            mode (str): 'min' to decrease when the metric stops decreasing, 'max' for the opposite.
+            factor (float): Factor by which the learning rate will be reduced (new_lr = lr * factor).
+            patience (int): Number of epochs to wait before reducing LR after no improvement.
+            min_lr (float): Minimum learning rate allowed.
+            verbose (bool): Whether to log LR changes.
+        """
+        self.monitor = monitor
+        self.mode = mode
+        self.factor = factor
+        self.patience = patience
+        self.min_lr = min_lr
+        self.verbose = verbose
+        self.schedulers = []
+
+    def on_train_start(self, trainer, pl_module):
+        """Set up ReduceLROnPlateau schedulers for all optimizers."""
+        for optimizer in trainer.optimizers:
+            scheduler = ReduceLROnPlateau(
+                optimizer,
+                mode=self.mode,
+                factor=self.factor,
+                patience=self.patience,
+                min_lr=self.min_lr,
+                verbose=self.verbose
+            )
+            self.schedulers.append(scheduler)
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+        """Step the scheduler based on the monitored metric."""
+        # Retrieve the monitored metric
+        metrics = trainer.callback_metrics
+        if self.monitor not in metrics:
+            raise ValueError(f"Metric '{self.monitor}' not found in trainer's callback metrics.")
+
+        metric_value = metrics[self.monitor].item()
+
+        # Update each scheduler with the metric value
+        for scheduler in self.schedulers:
+            scheduler.step(metric_value)
     
     

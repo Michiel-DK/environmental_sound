@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 
 
 from environmental_sound.utils.gcp import check_and_setup_directory
-from environmental_sound.contrastive.finetune import AudioDatasetSupervised
+from environmental_sound.contrastive.finetune import AudioDatasetSupervised, ReduceLROnPlateauCallback
 from environmental_sound.contrastive.encoder import AudioClassifier
 
 
@@ -70,13 +70,13 @@ def main_run(cfg: DictConfig):
     val_data = AudioDatasetSupervised(val, augment=False)
 
     train_loader = DataLoader(
-            train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True
+            train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True,persistent_workers=True
         )
     val_loader = DataLoader(
-            val_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True
+            val_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=False,persistent_workers=True
         )
     test_loader = DataLoader(
-            test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=8
+            test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=2,persistent_workers=True
         )
 
     model = AudioClassifier()
@@ -122,10 +122,11 @@ def main_run(cfg: DictConfig):
 
     trainer = pl.Trainer(
             max_epochs=trainer_config.epochs,
+            log_every_n_steps=15,
             accelerator=accelerator,
             devices=1,  # Use one device; adjust as needed
             logger=[wandb_logger if trainer_config.wandb_log else tensor_logger],
-            callbacks=[early_stop_callback, lr_monitor, checkpoint_callback]
+            callbacks=[early_stop_callback, lr_monitor, checkpoint_callback, ReduceLROnPlateauCallback()]
                 )
     trainer.fit(model, train_loader, val_loader)
 
