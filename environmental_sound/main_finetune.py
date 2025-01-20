@@ -38,18 +38,20 @@ def main_run(cfg: DictConfig):
     files = os.listdir(output_data_path)
     
     #filter extract test set unsupervised part to add for finetuning
-    filtered_files_test = [file for file in files if not file.startswith(trainer_config.finetune_prefix)]
+    filtered_files_test = [file for file in files if not any(file.startswith(prefix) for prefix in trainer_config.finetune_prefix)]
     
     _train, test = train_test_split(filtered_files_test, test_size=trainer_config.test_size, random_state=trainer_config.random_state) 
         
     #filter on spared data
-    filtered_files_prefix = [file for file in files if file.startswith(trainer_config.finetune_prefix)]
+    filtered_files_prefix = [file for file in files if any(file.startswith(prefix) for prefix in trainer_config.finetune_prefix)]
     
     filtered_files = sorted(test+filtered_files_prefix)
     
     filtered_wav = [x.replace('.npy', '.wav') for x in filtered_files]
     
     files_paths = [os.path.join(output_data_path, f) for f in filtered_files]
+    
+    print(len(files_paths))
     
     labels_df = pd.read_csv(os.path.join(root_path, 'audio_data', 'esc50.csv')).sort_values(by='filename')
     
@@ -65,7 +67,7 @@ def main_run(cfg: DictConfig):
             _train, test_size=trainer_config.val_size, random_state=trainer_config.random_state, stratify=[a[1] for a in _train]
         )
 
-    train_data = AudioDatasetSupervised(train, augment=False)
+    train_data = AudioDatasetSupervised(train, augment=True)
     test_data = AudioDatasetSupervised(test, augment=False)
     val_data = AudioDatasetSupervised(val, augment=False)
 

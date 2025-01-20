@@ -18,13 +18,13 @@ trainer_supervised:
 
 trainer_contrastive:
   batch_size: 32
-  epochs: 10
-  train_size: 0.75
-  val_size: 0.15
-  test_size: 0.15
+  epochs: 100
+  train_size: 0.80
+  val_size: 0.10
+  test_size: 0.10
   random_state: 42
   wandb_log: False
-  finetune_prefix: '5-'
+  finetune_prefix: ['5-', '4-']
 
 trainer_finetune:
   batch_size: 32
@@ -34,5 +34,5 @@ trainer_finetune:
   test_size: 0.10
   random_state: 42
   wandb_log: True
-  finetune_prefix: '5-'
-  contrastive_checkpoint: 'contrastive-epoch=105-val_loss=3.33.ckpt'
+  finetune_prefix: ['5-', '4-']
+  contrastive_checkpoint: 'contrastive-epoch=72-val_loss=2.14.ckpt'

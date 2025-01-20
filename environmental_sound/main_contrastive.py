@@ -16,6 +16,7 @@ import pytorch_lightning as pl
 
 from environmental_sound.contrastive.train_encoder import AudioDataset, Cola, DecayLearningRate
 from environmental_sound.utils.gcp import check_and_setup_directory
+from environmental_sound.contrastive.finetune import ReduceLROnPlateauCallback
 
 
 
@@ -40,7 +41,7 @@ def main_run(cfg: DictConfig):
     files = os.listdir(output_data_path)
         
     #filter for later finetuning
-    filtered_files = [file for file in files if not file.startswith(trainer_config.finetune_prefix)]
+    filtered_files = [file for file in files if not any(file.startswith(prefix) for prefix in trainer_config.finetune_prefix)]
     
     files_paths = [os.path.join(output_data_path, f) for f in filtered_files]
 
@@ -53,13 +54,13 @@ def main_run(cfg: DictConfig):
     val_data = AudioDataset(val, augment=False)
 
     train_loader = DataLoader(
-        train_data, batch_size=trainer_config.batch_size, num_workers=4, shuffle=True, persistent_workers=True
+        train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True, persistent_workers=True
     )
     val_loader = DataLoader(
-        val_data, batch_size=trainer_config.batch_size, num_workers=4, shuffle=False, persistent_workers=True
+        val_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=False, persistent_workers=True
     )
     test_loader = DataLoader(
-        test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=4, persistent_workers=True
+        test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=2, persistent_workers=True
     )
 
     model = Cola()
@@ -103,8 +104,9 @@ def main_run(cfg: DictConfig):
         max_epochs=trainer_config.epochs,
         accelerator=accelerator,
         devices=1,  # Use one device; adjust as needed
+        log_every_n_steps=15,
         logger=[wandb_logger if trainer_config.wandb_log else tensor_logger],
-        callbacks=[DecayLearningRate(), early_stop_callback, lr_monitor, checkpoint_callback],
+        callbacks=[ReduceLROnPlateauCallback(), early_stop_callback, lr_monitor, checkpoint_callback],
     )
     trainer.fit(model, train_loader, val_loader)
 
