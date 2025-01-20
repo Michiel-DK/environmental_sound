@@ -34,6 +34,7 @@ def extract_log_mel_spectrogram(
     Returns:
         ndarray: Log mel spectrogram of shape `(T, n_mels)`, where `T` is the number of frames.
     """
+        
     stfts = tf.signal.stft(
         waveform, frame_length=frame_length, frame_step=frame_step, fft_length=fft_length
     )
@@ -63,13 +64,22 @@ def random_mask(data, rate_start=0.2, rate_seq=0.3):
     Returns:
         ndarray: Spectrogram with masked regions.
     """
-    new_data = data.copy()
-    mean = new_data.mean()
+    # new_data = data.copy()
+    # mean = new_data.mean()
+    new_data = tf.identity(data)
+    mean = tf.reduce_mean(new_data)  # Calculate the mean of the data
     prev_zero = False
+    # Iterate over the rows of the tensor
     for i in range(new_data.shape[0]):
+        # Use Python's random.random for stochastic masking
         if random.random() < rate_start or (prev_zero and random.random() < rate_seq):
             prev_zero = True
-            new_data[i, :] = mean
+            # Mask the row with the mean
+            new_data = tf.tensor_scatter_nd_update(
+                new_data,
+                indices=[[i]],
+                updates=[tf.fill(new_data[i, :].shape, mean)],
+            )
         else:
             prev_zero = False
     return new_data
@@ -165,19 +175,21 @@ class ContrastiveAudioDataset(Dataset):
         """
         npy_path = self.data[idx]
         waveform = np.load(npy_path)
-
+        
         # Preprocess waveform to log mel spectrogram
         spectrogram = extract_log_mel_spectrogram(waveform)
+
 
         if self.augment:
             spectrogram = random_mask(spectrogram)
             spectrogram = random_multiply(spectrogram)
 
+
         x1 = random_crop(spectrogram, crop_size=self.crop_size)
         x2 = random_crop(spectrogram, crop_size=self.crop_size)
 
         return (
-            torch.tensor(x1, dtype=torch.float),
-            torch.tensor(x2, dtype=torch.float),
+            torch.tensor(x1.numpy(), dtype=torch.float32),
+            torch.tensor(x2.numpy(), dtype=torch.float32),
         )
 

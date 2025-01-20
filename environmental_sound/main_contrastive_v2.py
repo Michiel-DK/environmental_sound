@@ -33,7 +33,7 @@ def main_run(cfg: DictConfig):
     
     
     root_path = os.path.dirname(os.path.dirname(__file__))
-    data_path = 'audio_data/44100_npy/'
+    data_path = f'audio_data/{project_config.local_npy_dir}/'
         
     output_data_path = os.path.join(root_path, data_path)
     
@@ -50,9 +50,9 @@ def main_run(cfg: DictConfig):
 
     train, val = train_test_split(_train, test_size=trainer_config.val_size, random_state=trainer_config.random_state)
 
-    train_data = ContrastiveAudioDataset(train, augment=True, seq_len=trainer_config.seq_len, crop_size=trainer_config.crop_size)
-    test_data = ContrastiveAudioDataset(test, augment=False, seq_len=trainer_config.seq_len, crop_size=trainer_config.crop_size)
-    val_data = ContrastiveAudioDataset(val, augment=False, seq_len=trainer_config.seq_len, crop_size=trainer_config.crop_size)
+    train_data = ContrastiveAudioDataset(train, augment=True, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
+    test_data = ContrastiveAudioDataset(test, augment=False, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
+    val_data = ContrastiveAudioDataset(val, augment=False, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
 
     train_loader = DataLoader(
         train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True, persistent_workers=True

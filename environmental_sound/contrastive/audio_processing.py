@@ -41,7 +41,7 @@ def load_audio_file(file_path, input_length=input_length):
 
         data = np.pad(data, (offset, input_length - len(data) - offset), "constant")
 
-    data = pre_process_audio_mel_t(data)
+    #data = pre_process_audio_mel_t(data)
     return data
 
 
@@ -80,7 +80,7 @@ def save(input_path, output_path):
 if __name__ == "__main__":
 
     input_data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'audio_data/44100/')
-    output_data_path = os.path.join(os.path.dirname(os.path.dirname(input_data_path)), '44100_npy/')
+    output_data_path = os.path.join(os.path.dirname(os.path.dirname(input_data_path)), '44100_npy_no_spect/')
     
     files = os.listdir(input_data_path)
         
