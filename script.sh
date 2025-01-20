@@ -12,6 +12,7 @@ tar -xvf 44100_npy.tar || { echo "Extraction failed"; exit 1; }
 echo "Updating requirements.txt..."
 sed -i '/-e git+ssh:\/\/git@github.com\/Michiel-DK\/environmental_sound.git@ee1fd2714a59ee6120a90f677157b3d5f13fc00f#egg=environmental_sound/d' requirements.txt
 sed -i '/bunch==1.0.1/d' requirements.txt
+sed -i '/tensorflow-macos==2.16.2/d' requirements.txt
 
 # Install dependencies from requirements.txt
 echo "Installing dependencies from requirements.txt..."

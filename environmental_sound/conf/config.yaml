@@ -17,11 +17,16 @@ trainer_supervised:
   test_size: 0.15
 
 trainer_contrastive:
-  batch_size: 32
-  epochs: 100
+  batch_size: 64
+  epochs: 200
   train_size: 0.80
   val_size: 0.10
   test_size: 0.10
+  seq_length: 44100
+  crop_size: 128
+  embedding_dim: 512
+  similarity_type: 'dot' #bilinear
+  temperature: 0.1
   random_state: 42
   wandb_log: False
   finetune_prefix: ['5-', '4-']
