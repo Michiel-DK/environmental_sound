@@ -91,7 +91,7 @@ class Cola(pl.LightningModule):
         # Compute loss and accuracy
         loss = F.cross_entropy(y_hat, y)
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
@@ -105,7 +105,7 @@ class Cola(pl.LightningModule):
 
         loss = F.cross_entropy(y_hat, y)
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
@@ -117,7 +117,7 @@ class Cola(pl.LightningModule):
 
         loss = F.cross_entropy(y_hat, y)
         _, predicted = torch.max(y_hat, 1)
-        acc = (predicted == y).double().mean()
+        acc = (predicted == y).float().mean()
 
         self.log("test_loss", loss, prog_bar=True)
         self.log("test_acc", acc, prog_bar=True)
