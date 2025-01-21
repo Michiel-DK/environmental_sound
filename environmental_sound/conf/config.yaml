@@ -39,6 +39,8 @@ trainer_finetune:
   val_size: 0.10
   test_size: 0.10
   random_state: 42
+  classes: 50
+  embedding_dim: 512
   wandb_log: True
   finetune_prefix: ['5-', '4-']
   contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'

@@ -14,9 +14,8 @@ from torch.utils.data import DataLoader
 
 
 from environmental_sound.utils.gcp import check_and_setup_directory
-from environmental_sound.contrastive.finetune import ReduceLROnPlateauCallback
-from environmental_sound.contrastive.audio_dataset_v2 import AudioDatasetSupervised
-from environmental_sound.contrastive.cola_model_v2 import AudioClassifier
+from environmental_sound.contrastive.finetune import AudioDatasetSupervised, ReduceLROnPlateauCallback
+from environmental_sound.contrastive.encoder import AudioClassifier
 
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
@@ -30,7 +29,7 @@ def main_run(cfg: DictConfig):
     trainer_config = Bunch(config_dict['trainer_finetune'])
     
     root_path = os.path.dirname(os.path.dirname(__file__))
-    data_path = 'audio_data/44100_npy_nopre/'
+    data_path = 'audio_data/44100_npy/'
         
     output_data_path = os.path.join(root_path, data_path)
     

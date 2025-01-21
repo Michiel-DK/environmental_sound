@@ -14,8 +14,9 @@ from torch.utils.data import DataLoader
 
 
 from environmental_sound.utils.gcp import check_and_setup_directory
-from environmental_sound.contrastive.finetune import AudioDatasetSupervised, ReduceLROnPlateauCallback
-from environmental_sound.contrastive.encoder import AudioClassifier
+from environmental_sound.contrastive.finetune import ReduceLROnPlateauCallback
+from environmental_sound.contrastive.audio_dataset_v2 import AudioDatasetSupervised
+from environmental_sound.contrastive.cola_model_v2 import AudioClassifier
 
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
@@ -29,7 +30,7 @@ def main_run(cfg: DictConfig):
     trainer_config = Bunch(config_dict['trainer_finetune'])
     
     root_path = os.path.dirname(os.path.dirname(__file__))
-    data_path = 'audio_data/44100_npy/'
+    data_path = 'audio_data/44100_npy_nopre/'
         
     output_data_path = os.path.join(root_path, data_path)
     
@@ -81,7 +82,7 @@ def main_run(cfg: DictConfig):
             test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=2,persistent_workers=True
         )
 
-    model = AudioClassifier()
+    model = AudioClassifier(classes=trainer_config.classes, embedding_dim=trainer_config.embedding_dim)
     
     if trainer_config.wandb_log is False:
         
@@ -94,7 +95,7 @@ def main_run(cfg: DictConfig):
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',
         dirpath='checkpoints/',
-        filename='contr_fine-{epoch:02d}-{val_loss:.2f}',
+        filename='contr_fine_v2-{epoch:02d}-{val_loss:.2f}',
         save_top_k=1,
         mode='min'
     )

@@ -190,11 +190,11 @@ class ContrastiveAudioDataset(Dataset):
         )
 
 class AudioDatasetSupervised(torch.utils.data.Dataset):
-    def __init__(self, data, max_len=128, augment=True):
+    def __init__(self, data, augment=True, crop_size=128):
         self.data = data
-        self.max_len = max_len
         self.augment = augment
-
+        self.crop_size = crop_size
+        
     def __len__(self):
         return len(self.data)
 
