@@ -7,3 +7,4 @@ tensorboard_logs/
 outputs/
 *.egg-info/
 *.tar
+.DS_Store
