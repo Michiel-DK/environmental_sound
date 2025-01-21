@@ -1,7 +1,7 @@
 wandb:
   project: "environmental-sound"
-  group: "contrastive_finetune"  #base_resnet50 #contrastive_model
-  name: "contrastive_finetune" #base_resnet50_aug/no_aug #contrastive_model
+  group: "contrastive_finetune_v2"  #base_resnet50 #contrastive_model #contrastive_finetune
+  name: "contrastive_finetune_v2" #base_resnet50_aug/no_aug #contrastive_model #contrastive_finetune
   bucket_name: "environmental_sound"
   tar_blob_name: "44100_npy_nopre.tar"
   local_npy_dir: "44100_npy_nopre"

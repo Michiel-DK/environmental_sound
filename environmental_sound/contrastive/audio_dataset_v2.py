@@ -189,3 +189,31 @@ class ContrastiveAudioDataset(Dataset):
             torch.tensor(x2, dtype=torch.float32),
         )
 
+class AudioDatasetSupervised(torch.utils.data.Dataset):
+    def __init__(self, data, max_len=128, augment=True):
+        self.data = data
+        self.max_len = max_len
+        self.augment = augment
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        npy_path = self.data[idx][0]
+        label = self.data[idx][1]
+
+        waveform = np.load(npy_path)
+        
+        # Preprocess waveform to log mel spectrogram
+        spectrogram = extract_log_mel_spectrogram(waveform)
+
+        if self.augment:
+            spectrogram = random_mask(spectrogram)
+            spectrogram = random_multiply(spectrogram)
+            
+        x = random_crop(spectrogram, crop_size=self.crop_size)
+
+        x = torch.tensor(x, dtype=torch.float32)
+        label = torch.tensor(label, dtype=torch.long)
+
+        return x, label

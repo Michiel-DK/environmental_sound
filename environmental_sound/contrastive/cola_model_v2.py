@@ -124,3 +124,78 @@ class Cola(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-4)
+
+
+class AudioClassifier(pl.LightningModule):
+    def __init__(self, classes=50, embedding_dim=512, p=0.1):
+        super().__init__()
+        self.save_hyperparameters()
+
+        self.p = p
+        self.embedding_dim = embedding_dim
+
+        self.dropout = nn.Dropout(p=self.p)
+
+        self.encoder = Encoder(drop_connect_rate=self.p)
+
+        # MLP for classification
+        self.g = nn.Linear(1280, embedding_dim)
+        self.layer_norm = nn.LayerNorm(normalized_shape=embedding_dim)
+
+        self.fc1 = nn.Linear(embedding_dim, 256)
+        self.fc2 = nn.Linear(256, classes)
+
+    def forward(self, x):
+        x = self.dropout(self.encoder(x))
+
+        x = self.dropout(self.g(x))
+        x = self.dropout(torch.tanh(self.layer_norm(x)))
+
+        x = F.relu(self.dropout(self.fc1(x)))
+        y_hat = self.fc2(x)
+
+        return y_hat
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+
+        y_hat = self(x)
+
+        loss = F.cross_entropy(y_hat, y)
+
+        _, predicted = torch.max(y_hat, 1)
+        acc = (predicted == y).float().mean()
+
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+
+        y_hat = self(x)
+
+        loss = F.cross_entropy(y_hat, y)
+
+        _, predicted = torch.max(y_hat, 1)
+        acc = (predicted == y).float().mean()
+
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+
+        y_hat = self(x)
+
+        loss = F.cross_entropy(y_hat, y)
+
+        _, predicted = torch.max(y_hat, 1)
+        acc = (predicted == y).float().mean()
+
+        self.log("test_loss", loss, prog_bar=True)
+        self.log("test_acc", acc, prog_bar=True)
+
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=1e-4)
