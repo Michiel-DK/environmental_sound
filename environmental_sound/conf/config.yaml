@@ -41,4 +41,4 @@ trainer_finetune:
   random_state: 42
   wandb_log: True
   finetune_prefix: ['5-', '4-']
-  contrastive_checkpoint: 'contrastive-epoch=72-val_loss=2.14.ckpt'
+  contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'
