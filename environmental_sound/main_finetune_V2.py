@@ -120,7 +120,7 @@ def main_run(cfg: DictConfig):
 
     if trainer_config.contrastive_checkpoint is not None:
             
-        ckpt = torch.load(os.path.join(root_path, 'checkpoints', trainer_config.contrastive_checkpoint), map_location=accelerator)
+        ckpt = torch.load(os.path.join(root_path, 'checkpoints', trainer_config.contrastive_checkpoint), map_location=accelerator, weights_only=True)
 
         model.load_state_dict(ckpt["state_dict"], strict=False)
 

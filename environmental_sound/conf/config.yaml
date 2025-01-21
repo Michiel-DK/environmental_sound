@@ -35,9 +35,9 @@ trainer_contrastive:
 trainer_finetune:
   batch_size: 32
   epochs: 500
-  train_size: 0.8
-  val_size: 0.10
-  test_size: 0.10
+  train_size: 0.7
+  val_size: 0.15
+  test_size: 0.15
   random_state: 42
   classes: 50
   embedding_dim: 512
