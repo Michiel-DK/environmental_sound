@@ -149,10 +149,13 @@ class SimCLRFineTuner(pl.LightningModule):
 
 
 class AudioClassifier(pl.LightningModule):
-    def __init__(self, classes=50, embedding_dim=512, p=0.1, freeze_encoder=False):
+    def __init__(self, classes=50, embedding_dim=512, p=0.1, freeze_encoder=False, lr_encoder=1e-5, lr_downstream=1e-4):
         super().__init__()
         self.save_hyperparameters()
-
+        
+        self.lr_encoder = lr_encoder
+        self.lr_downstream = lr_downstream
+        
         self.p = p
         self.embedding_dim = embedding_dim
 
@@ -233,19 +236,19 @@ class AudioClassifier(pl.LightningModule):
         if self.freeze_encoder:
             # Only optimize the classification head
             optimizer = torch.optim.Adam([
-                {'params': self.g.parameters(), 'lr': 1e-4},
-                {'params': self.layer_norm.parameters(), 'lr': 1e-4},
-                {'params': self.fc1.parameters(), 'lr': 1e-4},
-                {'params': self.fc2.parameters(), 'lr': 1e-4},
+                {'params': self.g.parameters(), 'lr': self.lr_downstream},
+                {'params': self.layer_norm.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc1.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc2.parameters(), 'lr': self.lr_downstream},
             ])
         else:
             # Optimize both the encoder and classification head
             optimizer = torch.optim.Adam([
-                {'params': self.encoder.parameters(), 'lr': 1e-5},
-                {'params': self.g.parameters(), 'lr': 1e-4},
-                {'params': self.layer_norm.parameters(), 'lr': 1e-4},
-                {'params': self.fc1.parameters(), 'lr': 1e-4},
-                {'params': self.fc2.parameters(), 'lr': 1e-4},
+                {'params': self.encoder.parameters(), 'lr': self.lr_encoder},
+                {'params': self.g.parameters(), 'lr': self.lr_downstream},
+                {'params': self.layer_norm.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc1.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc2.parameters(), 'lr': self.lr_downstream},
             ])
 
         return optimizer

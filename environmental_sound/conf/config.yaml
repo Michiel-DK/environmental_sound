@@ -19,7 +19,7 @@ trainer_supervised:
 
 trainer_contrastive:
   batch_size: 16
-  epochs: 1
+  epochs: 200
   train_size: 0.80
   val_size: 0.10
   test_size: 0.10
@@ -34,14 +34,18 @@ trainer_contrastive:
 
 trainer_finetune:
   batch_size: 32
-  epochs: 500
+  epochs: 200
   train_size: 0.7
   val_size: 0.15
   test_size: 0.15
   random_state: 42
   classes: 50
+  seg_length: 44100
+  crop_size: 128
   embedding_dim: 512
-  wandb_log: True
+  wandb_log: False
   freeze_encoder: True
+  lr_downstream: 1e-4
+  lr_encoder: 1e-5
   finetune_prefix: ['5-', '4-']
   contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'
