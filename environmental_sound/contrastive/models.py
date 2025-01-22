@@ -112,7 +112,7 @@ class Cola(pl.LightningModule):
 class SimCLRFineTuner(pl.LightningModule):
     def __init__(self, encoder, embedding_dim=512, temperature=0.1, classes=50):
         super().__init__()
-        self.encoder = encoder
+        self.encoder = encoder  # Pretrained Cola model
         self.projection_head = nn.Sequential(
             nn.Linear(embedding_dim, 256),
             nn.ReLU(),
@@ -131,21 +131,57 @@ class SimCLRFineTuner(pl.LightningModule):
         # Compute similarity scores
         similarities = self.compute_similarity(x1, x2) / self.temperature
         targets = labels.repeat(2)  # Positive pairs for both views
-        return F.cross_entropy(similarities, targets)
+        loss = F.cross_entropy(similarities, targets)
+
+        # Compute accuracy
+        _, predicted = torch.max(similarities, 1)
+        acc = (predicted == targets).float().mean()
+        return loss, acc
 
     def training_step(self, batch, batch_idx):
-        x, labels = batch
-        x1 = self.encoder(x)
-        x2 = self.encoder(x)  # Augmented version
+        x1, x2, labels = batch  # Unpack batch
+        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
         x1 = self.projection_head(x1)
         x2 = self.projection_head(x2)
 
-        loss = self.contrastive_loss(x1, x2, labels)
-        self.log("train_loss", loss, prog_bar=True)
+        # Calculate loss and accuracy
+        loss, acc = self.contrastive_loss(x1, x2, labels)
+
+        # Log training metrics
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
+
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        x1, x2, labels = batch  # Unpack batch
+        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.projection_head(x1)
+        x2 = self.projection_head(x2)
+
+        # Calculate loss and accuracy
+        loss, acc = self.contrastive_loss(x1, x2, labels)
+
+        # Log validation metrics
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
+
+    def test_step(self, batch, batch_idx):
+        x1, x2, labels = batch  # Unpack batch
+        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.projection_head(x1)
+        x2 = self.projection_head(x2)
+
+        # Calculate loss and accuracy
+        loss, acc = self.contrastive_loss(x1, x2, labels)
+
+        # Log test metrics
+        self.log("test_loss", loss, prog_bar=True)
+        self.log("test_acc", acc, prog_bar=True)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-4)
+
 
 
 class AudioClassifier(pl.LightningModule):

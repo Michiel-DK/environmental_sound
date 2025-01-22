@@ -42,7 +42,7 @@ def main_run(cfg: DictConfig):
     files = os.listdir(output_data_path)
         
     #filter for later finetuning
-    filtered_files = [file for file in files if not any(file.startswith(prefix) for prefix in trainer_config.finetune_prefix)]
+    filtered_files = [file for file in files if any(file.startswith(prefix) for prefix in trainer_config.fold_prefix)]
     
     files_paths = [os.path.join(output_data_path, f) for f in filtered_files]
 
