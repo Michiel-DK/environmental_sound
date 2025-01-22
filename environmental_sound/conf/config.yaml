@@ -1,7 +1,7 @@
 wandb:
   project: "environmental-sound"
-  group: "contrastive_finetune_v2"  #base_resnet50 #contrastive_model #contrastive_finetune
-  name: "contrastive_finetune_v2" #base_resnet50_aug/no_aug #contrastive_model #contrastive_finetune
+  group: "contrastive_finetune_v2_frozen"  #base_resnet50 #contrastive_model #contrastive_finetune
+  name: "contrastive_finetune_v2_frozen" #base_resnet50_aug/no_aug #contrastive_model #contrastive_finetune
   bucket_name: "environmental_sound"
   tar_blob_name: "44100_npy_nopre.tar"
   local_npy_dir: "44100_npy_nopre"
@@ -30,17 +30,38 @@ trainer_contrastive:
   temperature: 0.1
   random_state: 42
   wandb_log: False
-  finetune_prefix: ['5-', '4-']
+  fold_prefix: ['1-', '2-', '3-']
 
-trainer_finetune:
-  batch_size: 32
-  epochs: 500
+trainer_selfsup:
+  batch_size: 64
+  epochs: 1
   train_size: 0.7
   val_size: 0.15
   test_size: 0.15
   random_state: 42
   classes: 50
+  seg_length: 44100
+  crop_size: 128
   embedding_dim: 512
-  wandb_log: True
-  finetune_prefix: ['5-', '4-']
+  temperature: 0.1
+  wandb_log: False
+  fold_prefix: ['4-']
+  contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'
+
+trainer_finetune:
+  batch_size: 32
+  epochs: 200
+  train_size: 0.7
+  val_size: 0.15
+  test_size: 0.15
+  random_state: 42
+  classes: 50
+  seg_length: 44100
+  crop_size: 128
+  embedding_dim: 512
+  wandb_log: False
+  freeze_encoder: True
+  lr_downstream: 1e-4
+  lr_encoder: 1e-5
+  fold_prefix: [ '5-']
   contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'

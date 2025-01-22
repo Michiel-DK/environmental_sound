@@ -3,29 +3,12 @@ import torch.nn.functional as F
 from torch import nn
 from efficientnet_pytorch import EfficientNet
 import pytorch_lightning as pl
+from environmental_sound.contrastive.model_utils import DotProduct, BilinearProduct
+
 
 # -------------------------------
-# Cola Model Definition
+# Models
 # -------------------------------
-
-class DotProduct(nn.Module):
-    """Normalized dot product similarity."""
-    def forward(self, anchor, positive):
-        anchor = F.normalize(anchor, dim=-1)
-        positive = F.normalize(positive, dim=-1)
-        return torch.matmul(anchor, positive.T)
-
-
-class BilinearProduct(nn.Module):
-    """Bilinear similarity with a trainable weight matrix."""
-    def __init__(self, dim):
-        super().__init__()
-        self.weight = nn.Parameter(torch.randn(dim, dim))
-    
-    def forward(self, anchor, positive):
-        projection_positive = torch.matmul(self.weight, positive.T)
-        return torch.matmul(anchor, projection_positive)
-
 
 class Encoder(nn.Module):
     def __init__(self, drop_connect_rate=0.1):
@@ -124,19 +107,109 @@ class Cola(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-4)
+    
+
+class SimCLRFineTuner(pl.LightningModule):
+    def __init__(self, encoder, embedding_dim=512, temperature=0.1, classes=50):
+        super().__init__()
+        self.encoder = encoder  # Pretrained Cola model
+        self.projection_head = nn.Sequential(
+            nn.Linear(embedding_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, embedding_dim)
+        )
+        self.temperature = temperature
+        self.classes = classes
+
+    def compute_similarity(self, x1, x2):
+        # Normalize embeddings
+        x1 = F.normalize(x1, dim=-1)
+        x2 = F.normalize(x2, dim=-1)
+        return torch.matmul(x1, x2.T)
+
+    def contrastive_loss(self, x1, x2, labels):
+        # Compute similarity scores
+        similarities = self.compute_similarity(x1, x2) / self.temperature  # Shape: (batch_size, batch_size)
+
+        # Create the target tensor for contrastive loss
+        batch_size = x1.size(0)
+        targets = torch.arange(batch_size, device=similarities.device)
+
+        # Compute cross-entropy loss
+        loss = F.cross_entropy(similarities, targets)
+
+        # Compute accuracy
+        _, predicted = torch.max(similarities, dim=1)
+        acc = (predicted == targets).float().mean()
+
+        return loss, acc
+
+    def training_step(self, batch, batch_idx):
+        x1, x2, labels = batch  # Unpack batch
+        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.projection_head(x1)
+        x2 = self.projection_head(x2)
+
+        # Calculate loss and accuracy
+        loss, acc = self.contrastive_loss(x1, x2, labels)
+
+        # Log training metrics
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x1, x2, labels = batch  # Unpack batch
+        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.projection_head(x1)
+        x2 = self.projection_head(x2)
+
+        # Calculate loss and accuracy
+        loss, acc = self.contrastive_loss(x1, x2, labels)
+
+        # Log validation metrics
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_acc", acc, on_step=False, on_epoch=True, prog_bar=True)
+
+    def test_step(self, batch, batch_idx):
+        x1, x2, labels = batch  # Unpack batch
+        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.projection_head(x1)
+        x2 = self.projection_head(x2)
+
+        # Calculate loss and accuracy
+        loss, acc = self.contrastive_loss(x1, x2, labels)
+
+        # Log test metrics
+        self.log("test_loss", loss, prog_bar=True)
+        self.log("test_acc", acc, prog_bar=True)
+
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=1e-4)
+
 
 
 class AudioClassifier(pl.LightningModule):
-    def __init__(self, classes=50, embedding_dim=512, p=0.1):
+    def __init__(self, classes=50, embedding_dim=512, p=0.1, freeze_encoder=False, lr_encoder=1e-5, lr_downstream=1e-4):
         super().__init__()
         self.save_hyperparameters()
-
+        
+        self.lr_encoder = lr_encoder
+        self.lr_downstream = lr_downstream
+        
         self.p = p
         self.embedding_dim = embedding_dim
 
         self.dropout = nn.Dropout(p=self.p)
 
+        # Encoder
         self.encoder = Encoder(drop_connect_rate=self.p)
+        
+        self.freeze_encoder = freeze_encoder
+        if self.freeze_encoder:
+            for param in self.encoder.parameters():
+                param.requires_grad = False  # Freeze encoder for linear probing
 
         # MLP for classification
         self.g = nn.Linear(1280, embedding_dim)
@@ -146,11 +219,14 @@ class AudioClassifier(pl.LightningModule):
         self.fc2 = nn.Linear(256, classes)
 
     def forward(self, x):
+        # Pass through encoder
         x = self.dropout(self.encoder(x))
 
+        # Intermediate layers
         x = self.dropout(self.g(x))
         x = self.dropout(torch.tanh(self.layer_norm(x)))
 
+        # Classification head
         x = F.relu(self.dropout(self.fc1(x)))
         y_hat = self.fc2(x)
 
@@ -198,4 +274,23 @@ class AudioClassifier(pl.LightningModule):
         self.log("test_acc", acc, prog_bar=True)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-4)
+        # Configure different learning rates for encoder and classification head
+        if self.freeze_encoder:
+            # Only optimize the classification head
+            optimizer = torch.optim.Adam([
+                {'params': self.g.parameters(), 'lr': self.lr_downstream},
+                {'params': self.layer_norm.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc1.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc2.parameters(), 'lr': self.lr_downstream},
+            ])
+        else:
+            # Optimize both the encoder and classification head
+            optimizer = torch.optim.Adam([
+                {'params': self.encoder.parameters(), 'lr': self.lr_encoder},
+                {'params': self.g.parameters(), 'lr': self.lr_downstream},
+                {'params': self.layer_norm.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc1.parameters(), 'lr': self.lr_downstream},
+                {'params': self.fc2.parameters(), 'lr': self.lr_downstream},
+            ])
+
+        return optimizer
