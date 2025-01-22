@@ -14,9 +14,10 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
 
-from environmental_sound.contrastive.train_encoder import AudioDataset, Cola, DecayLearningRate
+from environmental_sound.contrastive.datasets import ContrastiveAudioDatasetUnsupervised
 from environmental_sound.utils.gcp import check_and_setup_directory
-from environmental_sound.contrastive.finetune import ReduceLROnPlateauCallback
+from environmental_sound.contrastive.model_utils import ReduceLROnPlateauCallback
+from environmental_sound.contrastive.models import Cola
 
 
 
@@ -32,7 +33,7 @@ def main_run(cfg: DictConfig):
     
     
     root_path = os.path.dirname(os.path.dirname(__file__))
-    data_path = 'audio_data/44100_npy/'
+    data_path = f'audio_data/{project_config.local_npy_dir}/'
         
     output_data_path = os.path.join(root_path, data_path)
     
@@ -49,9 +50,9 @@ def main_run(cfg: DictConfig):
 
     train, val = train_test_split(_train, test_size=trainer_config.val_size, random_state=trainer_config.random_state)
 
-    train_data = AudioDataset(train, augment=True)
-    test_data = AudioDataset(test, augment=False)
-    val_data = AudioDataset(val, augment=False)
+    train_data = ContrastiveAudioDatasetUnsupervised(train, augment=True, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
+    test_data = ContrastiveAudioDatasetUnsupervised(test, augment=False, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
+    val_data = ContrastiveAudioDatasetUnsupervised(val, augment=False, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
 
     train_loader = DataLoader(
         train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True, persistent_workers=True
@@ -63,7 +64,7 @@ def main_run(cfg: DictConfig):
         test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=2, persistent_workers=True
     )
 
-    model = Cola()
+    model = Cola(embedding_dim=trainer_config.embedding_dim, similarity_type=trainer_config.similarity_type, temperature=trainer_config.temperature)
     
     # Initialize WandB logger
     if trainer_config.wandb_log:
@@ -76,7 +77,7 @@ def main_run(cfg: DictConfig):
     # EarlyStopping callback: stops training if no improvement in 'val_loss' for 3 epochs
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
-        patience=13,
+        patience=21,
         verbose=True,
         mode='min'
     )
@@ -88,7 +89,7 @@ def main_run(cfg: DictConfig):
         monitor='val_loss',
         dirpath='checkpoints/',
         filename='contrastive-{epoch:02d}-{val_loss:.2f}',
-        save_top_k=3,
+        save_top_k=1,
         mode='min'
     )
     
@@ -104,7 +105,7 @@ def main_run(cfg: DictConfig):
         max_epochs=trainer_config.epochs,
         accelerator=accelerator,
         devices=1,  # Use one device; adjust as needed
-        log_every_n_steps=15,
+        log_every_n_steps=len(train)//trainer_config.batch_size,
         logger=[wandb_logger if trainer_config.wandb_log else tensor_logger],
         callbacks=[ReduceLROnPlateauCallback(), early_stop_callback, lr_monitor, checkpoint_callback],
     )

@@ -2,11 +2,11 @@
 
 # Copy the tar file
 echo "Copying tar file..."
-cp /content/drive/MyDrive/environmental_sound/44100_npy.tar . || { echo "File copy failed"; exit 1; }
+cp /content/drive/MyDrive/environmental_sound/44100_npy_nopre.tar . || { echo "File copy failed"; exit 1; }
 
 # Extract the tar file
 echo "Extracting tar file..."
-tar -xvf 44100_npy.tar || { echo "Extraction failed"; exit 1; }
+tar -xvf 44100_npy_nopre.tar || { echo "Extraction failed"; exit 1; }
 
 # Remove specific lines from requirements.txt
 echo "Updating requirements.txt..."

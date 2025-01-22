@@ -1,12 +1,4 @@
-import numpy as np
 import random
-import torch
-from torch.utils.data import Dataset
-
-# -------------------------------
-# Preprocessing and Augmentation
-# -------------------------------
-
 import numpy as np
 import librosa
 
@@ -55,6 +47,54 @@ def extract_log_mel_spectrogram(
     return log_mel_spectrogram
 
 
+def random_time_mask(spectrogram, mask_ratio=0.15):
+    """Applies random time masking to the spectrogram."""
+    num_frames = spectrogram.shape[1]
+    mask_length = int(num_frames * mask_ratio)
+    start = np.random.randint(0, num_frames - mask_length)
+    spectrogram[:, start:start + mask_length] = 0
+    return spectrogram
+
+def random_frequency_mask(spectrogram, mask_ratio=0.1):
+    """Applies random frequency masking to the spectrogram."""
+    num_bins = spectrogram.shape[0]
+    mask_length = int(num_bins * mask_ratio)
+    start = np.random.randint(0, num_bins - mask_length)
+    spectrogram[start:start + mask_length, :] = 0
+    return spectrogram
+
+def random_time_stretch(waveform, rate_range=(0.8, 1.2)):
+    """Randomly stretches the waveform in time."""
+    rate = np.random.uniform(*rate_range)
+    return librosa.effects.time_stretch(waveform, rate)
+
+def add_random_noise(spectrogram, noise_level=0.05):
+    """Adds random noise to the spectrogram."""
+    noise = np.random.normal(0, noise_level, spectrogram.shape)
+    return spectrogram + noise
+
+def center_crop(spectrogram, crop_size):
+    """
+    Center crops a spectrogram to the specified crop size.
+
+    Args:
+        spectrogram (numpy.ndarray): Input spectrogram of shape (freq_bins, time_frames).
+        crop_size (int): Desired crop size (number of time frames).
+
+    Returns:
+        numpy.ndarray: Center-cropped spectrogram of shape (freq_bins, crop_size).
+    """
+    _, time_frames = spectrogram.shape
+
+    if time_frames <= crop_size:
+        # If the input is smaller than the crop size, pad it
+        padding = (crop_size - time_frames) // 2
+        return np.pad(spectrogram, ((0, 0), (padding, crop_size - time_frames - padding)), mode="constant")
+    else:
+        # Compute cropping bounds
+        start = (time_frames - crop_size) // 2
+        end = start + crop_size
+        return spectrogram[:, start:end]
 
 def random_mask(data, rate_start=0.2, rate_seq=0.3):
     """
@@ -133,87 +173,6 @@ def random_crop(data, crop_size=128):
     return data[:, start : start + crop_size]
 
 
-class ContrastiveAudioDataset(Dataset):
-    """
-    Dataset for contrastive learning with audio data.
-
-    Args:
-        data (list): List of file paths to the audio data (e.g., .npy files).
-        augment (bool): Whether to apply augmentations. Default is True.
-        seg_length (int): Length of the audio segments (in samples). Default is 16,000.
-        crop_size (int): Number of frames for cropping spectrograms. Default is 128.
-    """
-
-    def __init__(self, data, augment=True, seg_length=44100, crop_size=128):
-        self.data = data
-        self.augment = augment
-        self.seg_length = seg_length
-        self.crop_size = crop_size
-
-    def __len__(self):
-        """
-        Returns the number of samples in the dataset.
-
-        Returns:
-            int: Total number of samples.
-        """
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        """
-        Retrieves and processes a single sample.
-
-        Args:
-            idx (int): Index of the sample.
-
-        Returns:
-            tuple: Two augmented views of the spectrogram as tensors `(x1, x2)`.
-        """
-        npy_path = self.data[idx]
-        waveform = np.load(npy_path)
-        
-        # Preprocess waveform to log mel spectrogram
-        spectrogram = extract_log_mel_spectrogram(waveform)
 
 
-        if self.augment:
-            spectrogram = random_mask(spectrogram)
-            spectrogram = random_multiply(spectrogram)
 
-
-        x1 = random_crop(spectrogram, crop_size=self.crop_size)
-        x2 = random_crop(spectrogram, crop_size=self.crop_size)
-
-        return (
-            torch.tensor(x1, dtype=torch.float32),
-            torch.tensor(x2, dtype=torch.float32),
-        )
-
-class AudioDatasetSupervised(torch.utils.data.Dataset):
-    def __init__(self, data, augment=True, crop_size=128):
-        self.data = data
-        self.augment = augment
-        self.crop_size = crop_size
-        
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        npy_path = self.data[idx][0]
-        label = self.data[idx][1]
-
-        waveform = np.load(npy_path)
-        
-        # Preprocess waveform to log mel spectrogram
-        spectrogram = extract_log_mel_spectrogram(waveform)
-
-        if self.augment:
-            spectrogram = random_mask(spectrogram)
-            spectrogram = random_multiply(spectrogram)
-            
-        x = random_crop(spectrogram, crop_size=self.crop_size)
-
-        x = torch.tensor(x, dtype=torch.float32)
-        label = torch.tensor(label, dtype=torch.long)
-
-        return x, label

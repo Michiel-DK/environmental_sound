@@ -1,7 +1,7 @@
 wandb:
   project: "environmental-sound"
-  group: "contrastive_finetune_v2"  #base_resnet50 #contrastive_model #contrastive_finetune
-  name: "contrastive_finetune_v2" #base_resnet50_aug/no_aug #contrastive_model #contrastive_finetune
+  group: "contrastive_finetune_v2_frozen"  #base_resnet50 #contrastive_model #contrastive_finetune
+  name: "contrastive_finetune_v2_frozen" #base_resnet50_aug/no_aug #contrastive_model #contrastive_finetune
   bucket_name: "environmental_sound"
   tar_blob_name: "44100_npy_nopre.tar"
   local_npy_dir: "44100_npy_nopre"
@@ -19,7 +19,7 @@ trainer_supervised:
 
 trainer_contrastive:
   batch_size: 16
-  epochs: 200
+  epochs: 1
   train_size: 0.80
   val_size: 0.10
   test_size: 0.10
@@ -42,5 +42,6 @@ trainer_finetune:
   classes: 50
   embedding_dim: 512
   wandb_log: True
+  freeze_encoder: True
   finetune_prefix: ['5-', '4-']
   contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'
