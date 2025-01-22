@@ -129,13 +129,19 @@ class SimCLRFineTuner(pl.LightningModule):
 
     def contrastive_loss(self, x1, x2, labels):
         # Compute similarity scores
-        similarities = self.compute_similarity(x1, x2) / self.temperature
-        targets = labels.repeat(2)  # Positive pairs for both views
+        similarities = self.compute_similarity(x1, x2) / self.temperature  # Shape: (batch_size, batch_size)
+
+        # Create the target tensor for contrastive loss
+        batch_size = x1.size(0)
+        targets = torch.arange(batch_size, device=similarities.device)
+
+        # Compute cross-entropy loss
         loss = F.cross_entropy(similarities, targets)
 
         # Compute accuracy
-        _, predicted = torch.max(similarities, 1)
+        _, predicted = torch.max(similarities, dim=1)
         acc = (predicted == targets).float().mean()
+
         return loss, acc
 
     def training_step(self, batch, batch_idx):

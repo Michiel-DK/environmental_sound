@@ -121,7 +121,7 @@ def main_run(cfg: DictConfig):
 
     trainer = pl.Trainer(
             max_epochs=trainer_config.epochs,
-            log_every_n_steps=15,
+            log_every_n_steps=len(train)//trainer_config.batch_size,
             accelerator=accelerator,
             devices=1,  # Use one device; adjust as needed
             logger=[wandb_logger if trainer_config.wandb_log else tensor_logger],
