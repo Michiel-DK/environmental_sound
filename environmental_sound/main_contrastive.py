@@ -33,7 +33,7 @@ def main_run(cfg: DictConfig):
     
     
     root_path = os.path.dirname(os.path.dirname(__file__))
-    data_path = f'audio_data/{project_config.local_npy_dir}/'
+    data_path = f'audio_data/{project_config.local_data_path}/{project_config.local_npy_dir}/'
         
     output_data_path = os.path.join(root_path, data_path)
     

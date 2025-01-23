@@ -114,12 +114,28 @@ class SimCLRFineTuner(pl.LightningModule):
         super().__init__()
         self.encoder = encoder  # Pretrained Cola model
         self.projection_head = nn.Sequential(
-            nn.Linear(embedding_dim, 256),
+            nn.Linear(1280, 512),  # Match the encoder's output dimension (1280) to the projection head's input
             nn.ReLU(),
-            nn.Linear(256, embedding_dim)
+            nn.Linear(512, embedding_dim)  # Project down to the embedding_dim (512)
         )
         self.temperature = temperature
         self.classes = classes
+
+    @classmethod
+    def from_pretrained(cls, checkpoint_path, encoder, **kwargs):
+        """
+        Load a SimCLRFineTuner model from a checkpoint with a provided encoder.
+        
+        Args:
+            checkpoint_path (str): Path to the checkpoint file.
+            encoder (nn.Module): Pretrained encoder to use.
+            **kwargs: Additional arguments to pass to the model.
+        """
+        return cls.load_from_checkpoint(
+            checkpoint_path,
+            encoder=encoder,
+            **kwargs
+        )
 
     def compute_similarity(self, x1, x2):
         # Normalize embeddings
@@ -146,7 +162,8 @@ class SimCLRFineTuner(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x1, x2, labels = batch  # Unpack batch
-        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.encoder(x1)  # Process x1 through the encoder
+        x2 = self.encoder(x2)  # Process x2 through the encoder
         x1 = self.projection_head(x1)
         x2 = self.projection_head(x2)
 
@@ -161,7 +178,8 @@ class SimCLRFineTuner(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x1, x2, labels = batch  # Unpack batch
-        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.encoder(x1)  # Process x1 through the encoder
+        x2 = self.encoder(x2)  # Process x2 through the encoder
         x1 = self.projection_head(x1)
         x2 = self.projection_head(x2)
 
@@ -174,7 +192,8 @@ class SimCLRFineTuner(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         x1, x2, labels = batch  # Unpack batch
-        x1, x2 = self.encoder((x1, x2))  # Pass only x1 and x2 to the encoder
+        x1 = self.encoder(x1)  # Process x1 through the encoder
+        x2 = self.encoder(x2)  # Process x2 through the encoder
         x1 = self.projection_head(x1)
         x2 = self.projection_head(x2)
 
@@ -191,7 +210,7 @@ class SimCLRFineTuner(pl.LightningModule):
 
 
 class AudioClassifier(pl.LightningModule):
-    def __init__(self, classes=50, embedding_dim=512, p=0.1, freeze_encoder=False, lr_encoder=1e-5, lr_downstream=1e-4):
+    def __init__(self, encoder, classes=50, embedding_dim=512, p=0.1, freeze_encoder=False, lr_encoder=1e-5, lr_downstream=1e-4):
         super().__init__()
         self.save_hyperparameters()
         
@@ -204,7 +223,7 @@ class AudioClassifier(pl.LightningModule):
         self.dropout = nn.Dropout(p=self.p)
 
         # Encoder
-        self.encoder = Encoder(drop_connect_rate=self.p)
+        self.encoder = encoder
         
         self.freeze_encoder = freeze_encoder
         if self.freeze_encoder:

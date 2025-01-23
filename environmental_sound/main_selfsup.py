@@ -30,7 +30,7 @@ def main_run(cfg: DictConfig):
     trainer_config = Bunch(config_dict['trainer_selfsup'])
     
     root_path = os.path.dirname(os.path.dirname(__file__))
-    data_path = 'audio_data/44100_npy_nopre/'
+    data_path = f'audio_data/{project_config.local_data_path}/{project_config.local_npy_dir}/'
         
     output_data_path = os.path.join(root_path, data_path)
     
@@ -52,7 +52,7 @@ def main_run(cfg: DictConfig):
     
     files_paths = [os.path.join(output_data_path, f) for f in filtered_files]
         
-    labels_df = pd.read_csv(os.path.join(root_path, 'audio_data', 'esc50.csv')).sort_values(by='filename')
+    labels_df = pd.read_csv(os.path.join(root_path, 'audio_data', project_config.local_data_path ,'labels.csv')).sort_values(by='filename')
     
     labels_list = labels_df[labels_df['filename'].isin(filtered_wav)].target.to_list()
     
@@ -82,7 +82,7 @@ def main_run(cfg: DictConfig):
     
     cola = Cola.load_from_checkpoint(os.path.join(root_path, 'checkpoints', trainer_config.contrastive_checkpoint))
     
-    model = SimCLRFineTuner(encoder = cola, embedding_dim=trainer_config.embedding_dim, temperature=trainer_config.temperature\
+    model = SimCLRFineTuner(encoder = cola.encoder, embedding_dim=trainer_config.embedding_dim, temperature=trainer_config.temperature\
         ,classes = trainer_config.classes)
     
     if trainer_config.wandb_log is False:
