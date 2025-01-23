@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 import os
 
-input_length = 44000 * 5
+input_length = 22050 * 4
 
 n_mels = 64
 
@@ -19,12 +19,12 @@ def pre_process_audio_mel_t(audio, sample_rate=44000):
 
 def load_audio_file(file_path, input_length=input_length):
     try:
-        data = librosa.core.load(file_path, sr=44000)[0]  # , sr=16000
+        data = librosa.core.load(file_path, sr=22050)[0]  # , sr=16000
     except ZeroDivisionError:
         data = []
 
     if len(data) > input_length:
-
+        
         max_offset = len(data) - input_length
 
         offset = np.random.randint(max_offset)
@@ -33,6 +33,8 @@ def load_audio_file(file_path, input_length=input_length):
 
     else:
         if input_length > len(data):
+            print(f'{file_path} - smaller')
+
             max_offset = input_length - len(data)
 
             offset = np.random.randint(max_offset)
@@ -43,6 +45,20 @@ def load_audio_file(file_path, input_length=input_length):
 
     #data = pre_process_audio_mel_t(data)
     return data
+
+def load_audio_file_strict(file_path, input_length=input_length):
+    try:
+        data = librosa.core.load(file_path, sr=22050)[0]  # , sr=16000
+    except ZeroDivisionError:
+        data = []
+
+    if len(data) != input_length:
+        
+        pass
+
+    else:
+
+        return data
 
 
 def random_crop(data, crop_size=128):
@@ -72,15 +88,15 @@ def random_multiply(data):
 
 
 def save(input_path, output_path):
-    data = load_audio_file(input_path)
+    data = load_audio_file_strict(input_path)
     np.save(output_path, data)
     return True
 
 
 if __name__ == "__main__":
 
-    input_data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'audio_data/44100/')
-    output_data_path = os.path.join(os.path.dirname(os.path.dirname(input_data_path)), '44100_npy_no_spect/')
+    input_data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'audio_data/8k/22050/')
+    output_data_path = os.path.join(os.path.dirname(os.path.dirname(input_data_path)), '22050_npy_nopre/')
     
     files = os.listdir(input_data_path)
         

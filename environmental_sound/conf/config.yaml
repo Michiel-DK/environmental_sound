@@ -5,6 +5,7 @@ wandb:
   bucket_name: "environmental_sound"
   tar_blob_name: "44100_npy_nopre.tar"
   local_npy_dir: "44100_npy_nopre"
+  local_data_path: "2k"
 
 trainer_supervised:
   batch_size: 32
@@ -18,7 +19,7 @@ trainer_supervised:
   test_size: 0.15
 
 trainer_contrastive:
-  batch_size: 16
+  batch_size: 128
   epochs: 200
   train_size: 0.80
   val_size: 0.10
@@ -30,10 +31,10 @@ trainer_contrastive:
   temperature: 0.1
   random_state: 42
   wandb_log: False
-  fold_prefix: ['1-', '2-', '3-']
+  fold_prefix: ['1-', '2-', '3-', '4-', '5-','6-']
 
 trainer_selfsup:
-  batch_size: 64
+  batch_size: 128
   epochs: 1
   train_size: 0.7
   val_size: 0.15
@@ -45,7 +46,7 @@ trainer_selfsup:
   embedding_dim: 512
   temperature: 0.1
   wandb_log: False
-  fold_prefix: ['4-']
+  fold_prefix: ['7-', '8-']
   contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'
 
 trainer_finetune:
@@ -63,5 +64,5 @@ trainer_finetune:
   freeze_encoder: True
   lr_downstream: 1e-4
   lr_encoder: 1e-5
-  fold_prefix: [ '5-']
+  fold_prefix: ['9-', '10-']
   contrastive_checkpoint: 'contrastive-epoch=70-val_loss=0.75.ckpt'

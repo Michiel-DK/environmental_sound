@@ -75,7 +75,7 @@ def main_run(cfg: DictConfig):
         callbacks=[early_stop_callback, lr_monitor, checkpoint_callback]
     )
 
-    csv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/esc50.csv')
+    csv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/2k/esc50.csv')
     labels_df = pd.read_csv(csv_path)
 
     train_transform = albumentations.Compose([
@@ -103,7 +103,7 @@ def main_run(cfg: DictConfig):
              }
         )
         
-    data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/44100/')
+    data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio_data/2k/44100/')
 
     # Initialize the data module
     data_module = MFCCDataModule(df=labels_df, target_size=(trainer_config.n_mfcc, 173), audio_transform_train=train_transform\

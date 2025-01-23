@@ -18,7 +18,7 @@ class MFCCDataModule(pl.LightningDataModule):
     def __init__(
         self, 
         df, 
-        data_path='audio_data/44100',  # Default directory path
+        data_path='audio_data/2k/44100',  # Default directory path
         batch_size=32, 
         num_workers=4,
         num_classes=50,
@@ -188,7 +188,7 @@ class MFCCDataModule(pl.LightningDataModule):
 
 if __name__ == '__main__':
     
-    labels_df = pd.read_csv('audio_data/esc50.csv')
+    labels_df = pd.read_csv('audio_data/2k/labels.csv')
     
     train_transform = albumentations.Compose([
         RandomAudio(seconds=2, p=0.5),    # <-- augmentation
