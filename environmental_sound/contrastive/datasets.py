@@ -20,6 +20,7 @@ class ContrastiveAudioDatasetUnsupervised(Dataset):
         self.augment = augment
         self.seg_length = seg_length
         self.crop_size = crop_size
+        self.error_count = 0  # Initialize error counter
 
     def __len__(self):
         """
@@ -41,7 +42,15 @@ class ContrastiveAudioDatasetUnsupervised(Dataset):
             tuple: Two augmented views of the spectrogram as tensors `(x1, x2)`.
         """
         npy_path = self.data[idx]
-        waveform = np.load(npy_path)
+        try:
+            waveform = np.load(npy_path)
+        except ValueError as e:
+            if "allow_pickle" in str(e):
+                # Increment error counter and skip this sample
+                self.error_count += 1
+                print(f"Error loading {npy_path}: {e}. Skipping this file.")
+                return None  # Return None to indicate a problematic file
+
         
         # Preprocess waveform to log mel spectrogram
         spectrogram = extract_log_mel_spectrogram(waveform)
@@ -108,3 +117,9 @@ class ContrastiveAudioDatasetSupervised(torch.utils.data.Dataset):
             spectrogram = random_crop(spectrogram, crop_size=self.crop_size)
             return torch.tensor(spectrogram, dtype=torch.float), label
 
+
+# Wrapper function for handling None entries during data loading
+def collate_fn_with_skip(batch):
+    # Filter out None entries
+    batch = [item for item in batch if item is not None]
+    return torch.utils.data.dataloader.default_collate(batch)

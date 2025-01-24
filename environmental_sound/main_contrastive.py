@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
 
-from environmental_sound.contrastive.datasets import ContrastiveAudioDatasetUnsupervised
+from environmental_sound.contrastive.datasets import ContrastiveAudioDatasetUnsupervised, collate_fn_with_skip
 from environmental_sound.utils.gcp import check_and_setup_directory
 from environmental_sound.contrastive.model_utils import ReduceLROnPlateauCallback
 from environmental_sound.contrastive.models import Cola
@@ -55,13 +55,13 @@ def main_run(cfg: DictConfig):
     val_data = ContrastiveAudioDatasetUnsupervised(val, augment=False, seg_length=trainer_config.seg_length, crop_size=trainer_config.crop_size)
 
     train_loader = DataLoader(
-        train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True, persistent_workers=True
+        train_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=True, persistent_workers=True, collate_fn=collate_fn_with_skip
     )
     val_loader = DataLoader(
-        val_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=False, persistent_workers=True
+        val_data, batch_size=trainer_config.batch_size, num_workers=2, shuffle=False, persistent_workers=True, collate_fn=collate_fn_with_skip
     )
     test_loader = DataLoader(
-        test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=2, persistent_workers=True
+        test_data, batch_size=trainer_config.batch_size, shuffle=False, num_workers=2, persistent_workers=True, collate_fn=collate_fn_with_skip
     )
 
     model = Cola(embedding_dim=trainer_config.embedding_dim, similarity_type=trainer_config.similarity_type, temperature=trainer_config.temperature)

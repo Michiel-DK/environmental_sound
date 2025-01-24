@@ -4,7 +4,7 @@ import librosa
 
 def extract_log_mel_spectrogram(
     waveform,
-    sample_rate=44100,
+    sample_rate=22050,
     frame_length=2048,  # ~46 ms window
     frame_step=1024,    # ~23 ms step for 50% overlap
     fft_length=2048,    # Matches frame_length

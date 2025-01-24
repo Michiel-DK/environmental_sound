@@ -99,8 +99,17 @@ if __name__ == "__main__":
     output_data_path = os.path.join(os.path.dirname(os.path.dirname(input_data_path)), '22050_npy_nopre/')
     
     files = os.listdir(input_data_path)
+    
+    import pandas as pd
+    
+    df = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(input_data_path)), 'labels.csv'))
+    df_filtered = df[df['check']==1]
+    
+    filtered_list = list(df_filtered.filename.to_list())
+    
+    filtered_files = list(set(files) & set(filtered_list))
         
-    for i, file in tqdm(enumerate(files), total=len(files)):
+    for i, file in tqdm(enumerate(filtered_files), total=len(filtered_files)):
         
         input_file = os.path.join(input_data_path, file)
         output_file = os.path.join(output_data_path, file.replace('.wav', '.npy'))

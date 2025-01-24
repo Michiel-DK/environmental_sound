@@ -15,19 +15,6 @@ def check_and_setup_directory(root_path, output_data_path, bucket_name, tar_blob
         bucket_name (str): The name of the GCS bucket.
         tar_blob_name (str): The blob name of the .tar file in the bucket.
     """
-    
-    try:
-        from google.colab import auth
-        try:
-        # Attempt to retrieve credentials
-            creds, project = default()
-            print("Already authenticated.")
-        except DefaultCredentialsError:
-            # If no credentials found, authenticate
-            print("Not authenticated. Running auth.authenticate_user()...")
-            auth.authenticate_user()
-    except:
-        IN_COLAB = False
         
     if not os.path.exists(output_data_path):
         print(f"Directory {output_data_path} does not exist. Creating it...")

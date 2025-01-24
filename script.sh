@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Copy the tar file
-echo "Copying tar file..."
-cp /content/drive/MyDrive/environmental_sound/44100_npy_nopre.tar . || { echo "File copy failed"; exit 1; }
+# echo "Copying tar file..."
+# cp /content/drive/MyDrive/environmental_sound/44100_npy_nopre.tar . || { echo "File copy failed"; exit 1; }
 
 # Extract the tar file
 # echo "Extracting tar file..."
@@ -27,3 +27,13 @@ echo "Installing the current directory as a package..."
 pip install -e . || { echo "Installation of the current directory failed"; exit 1; }
 
 echo "Script completed successfully."
+
+#wandb
+wandb login
+
+# Set up gcloud
+gcloud auth login
+gcloud config set project 
+
+export GOOGLE_CLOUD_PROJECT="contrastive-learning-440810"
+export GOOGLE_APPLICATION_CREDENTIALS="contrastive-learning-440810-fc5e5d2e0d00.json"

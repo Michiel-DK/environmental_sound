@@ -25,7 +25,7 @@ trainer_contrastive:
   val_size: 0.10
   test_size: 0.10
   seg_length: 44100
-  crop_size: 128
+  crop_size: 86
   embedding_dim: 512
   similarity_type: 'dot' #bilinear
   temperature: 0.1
@@ -42,7 +42,7 @@ trainer_selfsup:
   random_state: 42
   classes: 50
   seg_length: 44100
-  crop_size: 128
+  crop_size: 86
   embedding_dim: 512
   temperature: 0.1
   wandb_log: False
@@ -58,7 +58,7 @@ trainer_finetune:
   random_state: 42
   classes: 50
   seg_length: 44100
-  crop_size: 128
+  crop_size: 86
   embedding_dim: 512
   wandb_log: False
   freeze_encoder: True
