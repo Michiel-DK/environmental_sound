@@ -78,4 +78,4 @@ All hyperparameters live in `environmental_sound/conf/config.yaml` (batch size, 
 
 ---
 
-<sub>Results pulled from Weights & Biases and analyzed, and the repo tidied up, with the help of [Claude Code](https://claude.com/claude-code).</sub>
+<sub>Original code (2025) written by me; results analysis (pulled from Weights & Biases) and repo cleanup done with the help of [Claude Code](https://claude.com/claude-code).</sub>
