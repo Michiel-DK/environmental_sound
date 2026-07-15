@@ -4,6 +4,12 @@ Classifying environmental sounds on **[ESC-50](https://github.com/karolpiczak/ES
 
 > **TL;DR** — The supervised CNN reaches **~62% test accuracy**. The self-supervised contrastive model, pretrained on ESC-50 alone, only reaches **~19%** with a frozen linear probe. This is a clean, measured demonstration of **shortcut learning**: contrastive SSL needs large-scale unlabeled data (e.g. AudioSet, ~2M clips), and on a 2k-clip dataset the pretext task becomes trivial and the learned features don't transfer.
 
+> ℹ️ **Note on the numbers:** the accuracies above are aggregated from private
+> Weights & Biases runs and are **not reproducible from this repo alone** (no run
+> artifacts committed). Some contrastive/probe runs used a 10-fold corpus
+> (UrbanSound8K), so the committed `conf/config.yaml` folds won't match ESC-50 as-is.
+> Treat the figures as reported, not verifiable here.
+
 ---
 
 ## Results
