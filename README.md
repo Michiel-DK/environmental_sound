@@ -71,6 +71,9 @@ python -m environmental_sound.main_supervised
 # Self-supervised: pretrain, then fine-tune / probe
 python -m environmental_sound.main_contrastive
 python -m environmental_sound.main_finetune
+
+# Self-supervised training flow (loads the contrastive checkpoint)
+python -m environmental_sound.main_selfsup
 ```
 
 All hyperparameters live in `environmental_sound/conf/config.yaml` (batch size, temperature, embedding dim, freeze-encoder, learning rates, W&B project). ESC-50 audio is expected under `audio_data/` (see `data/`).
