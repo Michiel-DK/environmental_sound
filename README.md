@@ -14,8 +14,8 @@ only found afterwards.
 > **TL;DR.** The supervised CNN reaches ~62% test accuracy on ESC-50. The contrastive
 > model, pretrained on the same small corpus, reaches ~19% with a frozen linear probe.
 > Two things explain the gap: contrastive SSL needs far more unlabeled data than a
-> 2,000-clip dataset gives it, and the "fine-tuning" stage of this pipeline never
-> actually used the labels (see below).
+> 2,000-clip dataset gives it, and one of the two "fine-tuning" entry points
+> (`main_selfsup.py`) never actually used the labels (see below).
 
 > **Note on the numbers.** The accuracies below are aggregated from 25 private Weights &
 > Biases runs and are not reproducible from this repo alone (no run artifacts committed).
