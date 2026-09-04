@@ -5,8 +5,9 @@
 ![Weights & Biases](https://img.shields.io/badge/tracking-Weights_%26_Biases-1baf7a)
 ![ESC-50](https://img.shields.io/badge/data-ESC--50-555555)
 
-Built between January 2025 and July 2026 (first and last commit); frozen since. This is a
-record of a finished experiment: a supervised CNN baseline for environmental sound
+The model and pipeline code was written between 14 and 23 January 2025 and is frozen;
+later commits are documentation, packaging and notebook hygiene. This is a record of a
+finished experiment: a supervised CNN baseline for environmental sound
 classification against a COLA-style contrastive self-supervised pipeline, and an honest
 account of why the self-supervised side underperformed, including a flaw in the code I
 only found afterwards.
@@ -72,9 +73,18 @@ easy, the encoder learns nothing transferable, and the frozen linear probe colla
 ~19% against the 62% supervised baseline confirms it.
 
 Data scale is the main cause. Contrastive SSL (COLA, SimCLR) is designed for massive
-unlabeled corpora: the original COLA pretrains on AudioSet (~2M clips) and *then*
-transfers to ESC-50. Pretraining on at most a couple of thousand clips and evaluating on
+unlabeled corpora: the original COLA paper pretrains on AudioSet (about 2M clips) and
+then transfers to nine downstream tasks such as TUT acoustic scenes and speech commands,
+where a frozen COLA encoder averages 74% linear-probe accuracy against 29% for a random
+encoder ([Saeed et al., 2020](https://arxiv.org/abs/2010.10915)). ESC-50 is not among
+the paper's tasks. Pretraining on at most a couple of thousand clips and evaluating on
 the same small set cannot be expected to beat plain supervised learning.
+
+For placement: the ~62% supervised result sits just under Piczak's 2015 CNN baseline of
+64.5% on ESC-50 (different protocol: a single random split here versus the leaderboard's
+5-fold cross-validation), human accuracy on the set is 81.3%, and current top entries on
+the [ESC-50 leaderboard](https://github.com/karolpiczak/ESC-50) exceed 98%. This was a
+baseline, not a state-of-the-art attempt.
 
 But the setup was not clean either. The stage I called "fine-tuning" (`main_selfsup.py`)
 never used the labels, so the encoder went through two rounds of the same shortcut-prone
